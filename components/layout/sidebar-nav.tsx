@@ -93,11 +93,11 @@ export function SidebarNav({ role, userName, userEmail }: SidebarNavProps) {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border px-4 py-3">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 group-data-[collapsible=icon]:hidden">
           <span className="font-semibold text-teal-400 text-sm tracking-tight">
             ShiftSync
           </span>
-          <span className="text-[11px] text-sidebar-foreground/50 capitalize group-data-[collapsible=icon]:hidden">
+          <span className="text-[11px] text-sidebar-foreground/50 capitalize">
             · {role}
           </span>
         </div>
