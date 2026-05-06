@@ -17,39 +17,55 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  LayoutDashboard,
+  CalendarDays,
+  Radio,
+  Users,
+  MapPin,
+  BarChart3,
+  ScrollText,
+  Mail,
+  Settings,
+  ArrowLeftRight,
+  Clock,
+  CalendarPlus,
+  type LucideIcon,
+} from "lucide-react";
 
 interface NavItem {
   label: string;
   href: string;
+  icon: LucideIcon;
 }
 
 const adminNav: NavItem[] = [
-  { label: "Overview", href: "/admin" },
-  { label: "Schedule", href: "/admin/schedule" },
-  { label: "On Duty", href: "/admin/on-duty" },
-  { label: "Staff", href: "/admin/staff" },
-  { label: "Locations", href: "/admin/locations" },
-  { label: "Analytics", href: "/admin/analytics" },
-  { label: "Audit Log", href: "/admin/audit" },
-  { label: "Simulated Emails", href: "/admin/simulated-emails" },
-  { label: "Settings", href: "/admin/settings" },
+  { label: "Overview", href: "/admin", icon: LayoutDashboard },
+  { label: "Schedule", href: "/admin/schedule", icon: CalendarDays },
+  { label: "On Duty", href: "/admin/on-duty", icon: Radio },
+  { label: "Staff", href: "/admin/staff", icon: Users },
+  { label: "Locations", href: "/admin/locations", icon: MapPin },
+  { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
+  { label: "Audit Log", href: "/admin/audit", icon: ScrollText },
+  { label: "Simulated Emails", href: "/admin/simulated-emails", icon: Mail },
+  { label: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
 const managerNav: NavItem[] = [
-  { label: "Schedule", href: "/manager" },
-  { label: "On Duty", href: "/manager/on-duty" },
-  { label: "Swap Requests", href: "/manager/swaps" },
-  { label: "Analytics", href: "/manager/analytics" },
-  { label: "Overtime", href: "/manager/overtime" },
-  { label: "Staff", href: "/manager/staff" },
+  { label: "Schedule", href: "/manager", icon: CalendarDays },
+  { label: "On Duty", href: "/manager/on-duty", icon: Radio },
+  { label: "Swap Requests", href: "/manager/swaps", icon: ArrowLeftRight },
+  { label: "Analytics", href: "/manager/analytics", icon: BarChart3 },
+  { label: "Overtime", href: "/manager/overtime", icon: Clock },
+  { label: "Staff", href: "/manager/staff", icon: Users },
 ];
 
 const staffNav: NavItem[] = [
-  { label: "My Schedule", href: "/staff" },
-  { label: "Available Shifts", href: "/staff/available" },
-  { label: "My Swaps", href: "/staff/swaps" },
-  { label: "Availability", href: "/staff/availability" },
-  { label: "Settings", href: "/staff/settings" },
+  { label: "My Schedule", href: "/staff", icon: CalendarDays },
+  { label: "Available Shifts", href: "/staff/available", icon: CalendarPlus },
+  { label: "My Swaps", href: "/staff/swaps", icon: ArrowLeftRight },
+  { label: "Availability", href: "/staff/availability", icon: Clock },
+  { label: "Settings", href: "/staff/settings", icon: Settings },
 ];
 
 const navByRole: Record<Role, NavItem[]> = {
@@ -78,7 +94,7 @@ export function SidebarNav({ role, userName, userEmail }: SidebarNavProps) {
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border px-4 py-3">
         <div className="flex items-center gap-2">
-          <span className="font-semibold text-[#0F6E56] text-sm tracking-tight">
+          <span className="font-semibold text-teal-400 text-sm tracking-tight">
             ShiftSync
           </span>
           <span className="text-[11px] text-sidebar-foreground/50 capitalize group-data-[collapsible=icon]:hidden">
@@ -97,8 +113,7 @@ export function SidebarNav({ role, userName, userEmail }: SidebarNavProps) {
                   (item.href !== "/admin" &&
                     item.href !== "/manager" &&
                     item.href !== "/staff" &&
-                    pathname.startsWith(item.href + "/")) ||
-                  (pathname === item.href);
+                    pathname.startsWith(item.href + "/"));
 
                 return (
                   <SidebarMenuItem key={item.href}>
@@ -111,7 +126,8 @@ export function SidebarNav({ role, userName, userEmail }: SidebarNavProps) {
                         isActive && "bg-teal-900/40 text-teal-400 font-medium hover:bg-teal-900/60 hover:text-teal-300"
                       )}
                     >
-                      {item.label}
+                      <item.icon />
+                      <span>{item.label}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
