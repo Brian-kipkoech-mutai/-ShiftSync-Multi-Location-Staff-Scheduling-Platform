@@ -83,8 +83,8 @@ export default async function ManagerSchedulePage({ searchParams }: PageProps) {
   return (
     <div>
       <div className="flex items-center justify-between mb-5">
-        <h1 className="text-lg font-semibold text-slate-900">Schedule</h1>
-        <p className="text-xs text-slate-400">
+        <h1 className="text-lg font-semibold text-foreground">Schedule</h1>
+        <p className="text-xs text-muted-foreground">
           {scope.role === "admin" ? "All locations" : locations.map((l) => l.name).join(" · ")}
         </p>
       </div>

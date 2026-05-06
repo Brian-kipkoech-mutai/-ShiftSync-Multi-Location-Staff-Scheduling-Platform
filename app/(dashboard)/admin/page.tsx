@@ -12,15 +12,15 @@ export default async function AdminDashboardPage() {
 
   return (
     <div>
-      <h1 className="text-lg font-semibold text-slate-900 mb-6">
+      <h1 className="text-lg font-semibold text-foreground mb-6">
         Overview — Coastal Eats
       </h1>
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <StatCard label="Active Locations" value={locationCount} />
         <StatCard label="Active Staff" value={staffCount} />
         <StatCard label="Published Shifts" value={shiftCount} />
       </div>
-      <p className="text-sm text-slate-500">
+      <p className="text-sm text-muted-foreground">
         Welcome, {user.name}. Use the sidebar to navigate.
       </p>
     </div>
@@ -29,9 +29,9 @@ export default async function AdminDashboardPage() {
 
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="bg-white rounded-md border border-slate-200 p-4">
-      <p className="text-2xl font-semibold text-slate-900">{value}</p>
-      <p className="text-sm text-slate-500 mt-0.5">{label}</p>
+    <div className="bg-card rounded-md border border-border p-4">
+      <p className="text-2xl font-semibold text-foreground">{value}</p>
+      <p className="text-sm text-muted-foreground mt-0.5">{label}</p>
     </div>
   );
 }

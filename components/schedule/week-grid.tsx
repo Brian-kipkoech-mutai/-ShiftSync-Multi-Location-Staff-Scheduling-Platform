@@ -26,7 +26,6 @@ export function WeekGrid({ weekStart, shifts, onShiftClick }: WeekGridProps) {
 
     for (const shift of shifts) {
       const shiftDate = new Date(shift.startUtc);
-      // Bucket by location's timezone calendar day
       const localDate = toZonedTime(shiftDate, shift.location.timezone);
 
       for (let i = 0; i < 7; i++) {
@@ -43,39 +42,37 @@ export function WeekGrid({ weekStart, shifts, onShiftClick }: WeekGridProps) {
 
   return (
     <div className="overflow-x-auto -mx-1 px-1">
-    <div className="grid grid-cols-7 gap-px bg-slate-200 rounded-md overflow-hidden border border-slate-200 min-w-[640px]">
+    <div className="grid grid-cols-7 gap-px bg-border rounded-md overflow-hidden border border-border min-w-[640px]">
       {days.map((day, i) => {
         const isToday = isSameDay(day, today);
         const dayShifts = shiftsByDay.get(i) ?? [];
 
         return (
-          <div key={i} className="bg-white flex flex-col min-h-32">
-            {/* Column header */}
+          <div key={i} className="bg-card flex flex-col min-h-32">
             <div
-              className={`h-10 flex flex-col items-center justify-center border-b border-slate-100 shrink-0 ${
-                isToday ? "bg-teal-50" : ""
+              className={`h-10 flex flex-col items-center justify-center border-b border-border shrink-0 ${
+                isToday ? "bg-teal-950/40" : ""
               }`}
             >
               <span
                 className={`text-[11px] font-medium uppercase tracking-wide ${
-                  isToday ? "text-[#0F6E56]" : "text-slate-400"
+                  isToday ? "text-teal-400" : "text-muted-foreground"
                 }`}
               >
                 {DAYS[i]}
               </span>
               <span
                 className={`text-sm font-semibold leading-tight ${
-                  isToday ? "text-[#0F6E56]" : "text-slate-700"
+                  isToday ? "text-teal-300" : "text-foreground"
                 }`}
               >
                 {format(day, "d")}
               </span>
             </div>
 
-            {/* Shifts */}
             <div className="flex-1 p-1 space-y-1 overflow-y-auto">
               {dayShifts.length === 0 ? (
-                <p className="text-[11px] text-slate-300 text-center mt-3">—</p>
+                <p className="text-[11px] text-muted-foreground/40 text-center mt-3">—</p>
               ) : (
                 dayShifts.map((shift) => (
                   <ShiftCard

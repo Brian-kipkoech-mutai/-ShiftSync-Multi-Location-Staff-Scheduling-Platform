@@ -27,20 +27,20 @@ export function ShiftCard({ shift, onClick }: ShiftCardProps) {
         "rounded-md px-2 py-1.5 cursor-pointer transition-colors group",
         "max-h-20 overflow-hidden",
         isDraft
-          ? "border border-dashed border-slate-300 bg-white hover:border-slate-400"
-          : "border border-teal-200 bg-teal-50 hover:border-teal-400",
-        isUnder && "border-red-300 bg-red-50 hover:border-red-400",
-        shift.isPremium && !isDraft && "border-amber-300 bg-amber-50 hover:border-amber-400"
+          ? "border border-dashed border-border bg-card hover:border-muted-foreground/40"
+          : "border border-teal-800/60 bg-teal-950/30 hover:border-teal-700",
+        isUnder && "border-red-800/60 bg-red-950/30 hover:border-red-700",
+        shift.isPremium && !isDraft && "border-amber-800/60 bg-amber-950/30 hover:border-amber-700"
       )}
     >
       <div className="flex items-start justify-between gap-1 min-w-0">
-        <p className="font-mono text-[11px] leading-tight text-slate-700 truncate flex-1">
+        <p className="font-mono text-[11px] leading-tight text-foreground truncate flex-1">
           {timeRange}
         </p>
         <span
           className={cn(
             "text-[10px] shrink-0 font-medium tabular-nums",
-            isFull ? "text-teal-600" : isUnder ? "text-red-500" : "text-slate-400"
+            isFull ? "text-teal-400" : isUnder ? "text-red-400" : "text-muted-foreground"
           )}
         >
           {assignedCount}/{shift.headcount}
@@ -48,9 +48,9 @@ export function ShiftCard({ shift, onClick }: ShiftCardProps) {
       </div>
 
       <div className="flex items-center gap-1 mt-0.5 min-w-0">
-        <p className="text-[11px] text-slate-500 truncate">{shift.location.name}</p>
+        <p className="text-[11px] text-muted-foreground truncate">{shift.location.name}</p>
         {shift.isPremium && (
-          <span className="text-[9px] text-amber-600 font-medium shrink-0">★</span>
+          <span className="text-[9px] text-amber-400 font-medium shrink-0">★</span>
         )}
       </div>
 
@@ -64,7 +64,7 @@ export function ShiftCard({ shift, onClick }: ShiftCardProps) {
         {isDraft && (
           <Badge
             variant="outline"
-            className="h-4 px-1 text-[10px] rounded-sm font-normal text-slate-400 border-slate-200"
+            className="h-4 px-1 text-[10px] rounded-sm font-normal text-muted-foreground border-border"
           >
             draft
           </Badge>
@@ -72,7 +72,7 @@ export function ShiftCard({ shift, onClick }: ShiftCardProps) {
       </div>
 
       {shift.assignments.length > 0 && (
-        <p className="text-[10px] text-slate-400 mt-0.5 truncate">
+        <p className="text-[10px] text-muted-foreground/70 mt-0.5 truncate">
           {shift.assignments.map((a) => a.user.name.split(" ")[0]).join(", ")}
         </p>
       )}

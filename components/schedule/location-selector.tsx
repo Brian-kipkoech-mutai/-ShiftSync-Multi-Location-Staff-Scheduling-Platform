@@ -22,7 +22,6 @@ export function LocationSelector({ locations, selectedIds }: LocationSelectorPro
 
   function toggle(locationId: string) {
     const params = new URLSearchParams(searchParams.toString());
-    // Remove all locationId params then re-add the new selection
     const current = params.getAll("locationId");
     params.delete("locationId");
 
@@ -46,15 +45,15 @@ export function LocationSelector({ locations, selectedIds }: LocationSelectorPro
 
   return (
     <div className="flex items-center gap-1.5 flex-wrap">
-      <span className="text-xs text-slate-500 mr-1">Locations:</span>
+      <span className="text-xs text-muted-foreground mr-1">Locations:</span>
       <Badge
         variant={allSelected ? "default" : "outline"}
         onClick={selectAll}
         className={cn(
           "cursor-pointer h-6 rounded-sm text-xs",
           allSelected
-            ? "bg-[#0F6E56] hover:bg-[#0a5642] text-white border-0"
-            : "hover:bg-slate-50"
+            ? "bg-teal-600 hover:bg-teal-700 text-white border-0"
+            : "hover:bg-accent"
         )}
       >
         All
@@ -69,8 +68,8 @@ export function LocationSelector({ locations, selectedIds }: LocationSelectorPro
             className={cn(
               "cursor-pointer h-6 rounded-sm text-xs",
               isSelected
-                ? "bg-[#0F6E56] hover:bg-[#0a5642] text-white border-0"
-                : "hover:bg-slate-50"
+                ? "bg-teal-600 hover:bg-teal-700 text-white border-0"
+                : "hover:bg-accent"
             )}
           >
             {loc.name}

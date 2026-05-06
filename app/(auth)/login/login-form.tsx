@@ -37,7 +37,7 @@ export function LoginForm() {
   }
 
   return (
-    <Card className="rounded-md border border-slate-200 shadow-none">
+    <Card className="rounded-md border border-border shadow-none bg-card">
       <CardHeader className="pb-4">
         <CardTitle className="text-base font-medium">Sign in</CardTitle>
       </CardHeader>
@@ -77,7 +77,7 @@ export function LoginForm() {
           <Button
             type="submit"
             disabled={loading}
-            className="w-full h-9 rounded-sm bg-[#0F6E56] hover:bg-[#0a5642] text-white"
+            className="w-full h-9 rounded-sm bg-teal-600 hover:bg-teal-700 text-white"
           >
             {loading ? "Signing in…" : "Sign in"}
           </Button>

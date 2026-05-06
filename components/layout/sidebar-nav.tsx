@@ -108,7 +108,7 @@ export function SidebarNav({ role, userName, userEmail }: SidebarNavProps) {
                       tooltip={item.label}
                       className={cn(
                         "rounded-sm",
-                        isActive && "bg-teal-50 text-[#0F6E56] font-medium hover:bg-teal-100 hover:text-[#0F6E56]"
+                        isActive && "bg-teal-900/40 text-teal-400 font-medium hover:bg-teal-900/60 hover:text-teal-300"
                       )}
                     >
                       {item.label}
@@ -124,7 +124,7 @@ export function SidebarNav({ role, userName, userEmail }: SidebarNavProps) {
       <SidebarFooter className="border-t border-sidebar-border p-3">
         <div className="flex items-center gap-2 min-w-0">
           <Avatar className="h-7 w-7 shrink-0">
-            <AvatarFallback className="text-[11px] bg-teal-100 text-[#0F6E56]">
+            <AvatarFallback className="text-[11px] bg-teal-900/50 text-teal-400">
               {initials}
             </AvatarFallback>
           </Avatar>

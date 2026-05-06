@@ -67,7 +67,7 @@ export default async function AdminSchedulePage({ searchParams }: PageProps) {
 
   return (
     <div>
-      <h1 className="text-lg font-semibold text-slate-900 mb-5">Schedule — All Locations</h1>
+      <h1 className="text-lg font-semibold text-foreground mb-5">Schedule — All Locations</h1>
       <ScheduleShell
         weekStart={weekStart}
         locationIds={selectedIds}

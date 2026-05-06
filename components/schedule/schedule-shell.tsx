@@ -51,21 +51,21 @@ export function ScheduleShell({
         />
       </div>
 
-      <div className="flex items-center gap-4 text-[11px] text-slate-400">
+      <div className="flex items-center gap-4 text-[11px] text-muted-foreground">
         <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded-sm border border-dashed border-slate-300 inline-block" />
+          <span className="w-3 h-3 rounded-sm border border-dashed border-border inline-block" />
           Draft
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded-sm border border-teal-200 bg-teal-50 inline-block" />
+          <span className="w-3 h-3 rounded-sm border border-teal-800/60 bg-teal-950/30 inline-block" />
           Published
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded-sm border border-amber-300 bg-amber-50 inline-block" />
+          <span className="w-3 h-3 rounded-sm border border-amber-800/60 bg-amber-950/30 inline-block" />
           Premium (Fri/Sat eve)
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded-sm border border-red-300 bg-red-50 inline-block" />
+          <span className="w-3 h-3 rounded-sm border border-red-800/60 bg-red-950/30 inline-block" />
           Under-staffed
         </span>
       </div>

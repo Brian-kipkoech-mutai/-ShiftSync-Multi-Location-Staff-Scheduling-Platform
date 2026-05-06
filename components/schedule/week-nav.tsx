@@ -64,7 +64,7 @@ export function WeekNav({ weekStart }: WeekNavProps) {
       >
         ›
       </Button>
-      <span className="text-sm font-medium text-slate-700 min-w-44">
+      <span className="text-sm font-medium text-foreground min-w-44">
         {weekLabel}
       </span>
       {!isCurrentWeek && (
@@ -72,7 +72,7 @@ export function WeekNav({ weekStart }: WeekNavProps) {
           variant="ghost"
           size="sm"
           onClick={goToToday}
-          className="h-8 text-xs text-[#0F6E56] hover:text-[#0a5642] rounded-sm"
+          className="h-8 text-xs text-teal-400 hover:text-teal-300 rounded-sm"
         >
           Today
         </Button>

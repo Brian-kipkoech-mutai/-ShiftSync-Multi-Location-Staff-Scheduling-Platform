@@ -14,12 +14,12 @@ export default async function ManagerLayout({
     <SidebarProvider>
       <SidebarNav role="manager" userName={user.name} userEmail={user.email} />
       <SidebarInset>
-        <header className="h-14 shrink-0 border-b border-slate-200 bg-white flex items-center gap-2 px-4">
+        <header className="h-14 shrink-0 border-b border-border bg-background flex items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />
           <div className="flex-1" />
           <NotificationBell userId={user.id} />
         </header>
-        <main className="flex-1 overflow-y-auto bg-slate-50">
+        <main className="flex-1 overflow-y-auto">
           <div className="max-w-screen-2xl mx-auto p-4 md:p-6">{children}</div>
         </main>
       </SidebarInset>
