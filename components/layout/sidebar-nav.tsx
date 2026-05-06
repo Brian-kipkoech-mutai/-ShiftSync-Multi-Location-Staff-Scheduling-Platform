@@ -4,15 +4,27 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import type { Role } from "@prisma/client";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarRail,
+} from "@/components/ui/sidebar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface NavItem {
   label: string;
   href: string;
-  icon?: string;
 }
 
 const adminNav: NavItem[] = [
-  { label: "Dashboard", href: "/admin" },
+  { label: "Overview", href: "/admin" },
   { label: "Schedule", href: "/admin/schedule" },
   { label: "On Duty", href: "/admin/on-duty" },
   { label: "Staff", href: "/admin/staff" },
@@ -26,7 +38,6 @@ const adminNav: NavItem[] = [
 const managerNav: NavItem[] = [
   { label: "Schedule", href: "/manager" },
   { label: "On Duty", href: "/manager/on-duty" },
-  { label: "Assign Staff", href: "/manager/assign" },
   { label: "Swap Requests", href: "/manager/swaps" },
   { label: "Analytics", href: "/manager/analytics" },
   { label: "Overtime", href: "/manager/overtime" },
@@ -56,42 +67,77 @@ interface SidebarNavProps {
 export function SidebarNav({ role, userName, userEmail }: SidebarNavProps) {
   const pathname = usePathname();
   const items = navByRole[role];
+  const initials = userName
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 
   return (
-    <aside className="w-60 shrink-0 border-r border-slate-200 bg-white flex flex-col h-full">
-      <div className="h-14 flex items-center px-4 border-b border-slate-200">
-        <span className="font-semibold text-[#0F6E56] text-sm tracking-tight">
-          ShiftSync
-        </span>
-        <span className="ml-2 text-xs text-slate-400 capitalize">{role}</span>
-      </div>
+    <Sidebar collapsible="icon">
+      <SidebarHeader className="border-b border-sidebar-border px-4 py-3">
+        <div className="flex items-center gap-2">
+          <span className="font-semibold text-[#0F6E56] text-sm tracking-tight">
+            ShiftSync
+          </span>
+          <span className="text-[11px] text-sidebar-foreground/50 capitalize group-data-[collapsible=icon]:hidden">
+            · {role}
+          </span>
+        </div>
+      </SidebarHeader>
 
-      <nav className="flex-1 overflow-y-auto py-2">
-        {items.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center h-9 px-4 text-sm rounded-none transition-colors",
-                isActive
-                  ? "bg-teal-50 text-[#0F6E56] font-medium"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-              )}
-            >
-              {item.label}
-            </Link>
-          );
-        })}
-      </nav>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {items.map((item) => {
+                const isActive =
+                  pathname === item.href ||
+                  (item.href !== "/admin" &&
+                    item.href !== "/manager" &&
+                    item.href !== "/staff" &&
+                    pathname.startsWith(item.href + "/")) ||
+                  (pathname === item.href);
 
-      <div className="border-t border-slate-200 p-4">
-        <p className="text-xs font-medium text-slate-700 truncate">{userName}</p>
-        <p className="text-xs text-slate-400 truncate">{userEmail}</p>
-        <LogoutButton />
-      </div>
-    </aside>
+                return (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton
+                      render={<Link href={item.href} />}
+                      isActive={isActive}
+                      tooltip={item.label}
+                      className={cn(
+                        "rounded-sm",
+                        isActive && "bg-teal-50 text-[#0F6E56] font-medium hover:bg-teal-100 hover:text-[#0F6E56]"
+                      )}
+                    >
+                      {item.label}
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+
+      <SidebarFooter className="border-t border-sidebar-border p-3">
+        <div className="flex items-center gap-2 min-w-0">
+          <Avatar className="h-7 w-7 shrink-0">
+            <AvatarFallback className="text-[11px] bg-teal-100 text-[#0F6E56]">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0 group-data-[collapsible=icon]:hidden">
+            <p className="text-xs font-medium text-sidebar-foreground truncate">{userName}</p>
+            <p className="text-[11px] text-sidebar-foreground/50 truncate">{userEmail}</p>
+          </div>
+          <LogoutButton />
+        </div>
+      </SidebarFooter>
+
+      <SidebarRail />
+    </Sidebar>
   );
 }
 
@@ -106,9 +152,13 @@ function LogoutButton() {
   return (
     <button
       onClick={handleLogout}
-      className="mt-2 text-xs text-slate-400 hover:text-slate-600 transition-colors"
+      title="Sign out"
+      className="shrink-0 text-sidebar-foreground/40 hover:text-sidebar-foreground transition-colors p-1 rounded-sm hover:bg-sidebar-accent group-data-[collapsible=icon]:hidden"
     >
-      Sign out
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+      </svg>
     </button>
   );
 }

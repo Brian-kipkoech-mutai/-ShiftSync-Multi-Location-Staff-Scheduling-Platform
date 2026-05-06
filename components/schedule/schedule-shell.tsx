@@ -34,7 +34,7 @@ export function ScheduleShell({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="flex items-center justify-between flex-wrap gap-2 sm:gap-3">
         <Suspense fallback={null}>
           <WeekNav weekStart={weekStart} />
         </Suspense>

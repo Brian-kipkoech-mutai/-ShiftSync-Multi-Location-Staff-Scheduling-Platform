@@ -42,7 +42,8 @@ export function WeekGrid({ weekStart, shifts, onShiftClick }: WeekGridProps) {
   const today = new Date();
 
   return (
-    <div className="grid grid-cols-7 gap-px bg-slate-200 rounded-md overflow-hidden border border-slate-200">
+    <div className="overflow-x-auto -mx-1 px-1">
+    <div className="grid grid-cols-7 gap-px bg-slate-200 rounded-md overflow-hidden border border-slate-200 min-w-[640px]">
       {days.map((day, i) => {
         const isToday = isSameDay(day, today);
         const dayShifts = shiftsByDay.get(i) ?? [];
@@ -88,6 +89,7 @@ export function WeekGrid({ weekStart, shifts, onShiftClick }: WeekGridProps) {
           </div>
         );
       })}
+    </div>
     </div>
   );
 }

@@ -43,7 +43,7 @@ Each location has exactly one canonical timezone. No attempt to split across tim
 
 ## Known Limitations
 
-- **Mobile responsiveness**: Desktop-first. Mobile layout not polished.
+- **Mobile responsiveness**: Schedule grid horizontally scrollable on mobile. Complex data-dense pages (analytics, audit log) are desktop-first.
 - **Clock-in/clock-out**: Not implemented. Shift assignment is the source of truth for on-duty status.
 - **Email simulation**: Inserts to `simulated_emails` table + console log. No real SMTP.
 - **DST edge cases**: Handled via `date-fns-tz`. Spring-forward gaps treated as +1 hour; fall-back ambiguous times treated as post-DST. Manual testing only.
@@ -56,12 +56,26 @@ Each location has exactly one canonical timezone. No attempt to split across tim
 
 ## Login Credentials
 
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | admin@coastaleats.com | Admin1234! |
-| Manager (SF+LA) | manager.sf@coastaleats.com | Manager1234! |
-| Manager (NY+Boston) | manager.ny@coastaleats.com | Manager1234! |
-| Manager (All 4) | manager.cross@coastaleats.com | Manager1234! |
-| Staff (example) | [firstname].[lastname]@coastaleats.com | Staff1234! |
+### Admins & Managers
 
-> Full staff list available in `/prisma/seed.ts` after seed is run.
+| Role | Name | Email | Password |
+|------|------|-------|----------|
+| Admin | Admin User | admin@coastaleats.com | Admin1234! |
+| Manager (The Pier + Sunset Grill) | Jordan Lee | manager.sf@coastaleats.com | Manager1234! |
+| Manager (Harbor View + The Wharf) | Taylor Nguyen | manager.ny@coastaleats.com | Manager1234! |
+| Manager (All 4 locations) | Morgan Walsh | manager.cross@coastaleats.com | Manager1234! |
+
+### Staff
+
+| Name | Email | Password | Notes |
+|------|-------|----------|-------|
+| Alex Chen | alex.chen@coastaleats.com | Staff1234! | Bartender + Server — SF/LA certified |
+| Maria Santos | maria.santos@coastaleats.com | Staff1234! | Host + Server — SF certified |
+| James Wilson | james.wilson@coastaleats.com | Staff1234! | Line Cook — SF/NY certified (cross-timezone) |
+| Sarah Johnson | sarah.johnson@coastaleats.com | Staff1234! | Server + Supervisor — SF certified |
+| Mike Brown | mike.brown@coastaleats.com | Staff1234! | Bartender — NY/Boston certified; **~39h this week** (overtime block demo) |
+| Emma Davis | emma.davis@coastaleats.com | Staff1234! | Server — NY certified; **~36h this week** (overtime warning demo) |
+| Carlos Rivera | carlos.rivera@coastaleats.com | Staff1234! | Line Cook — NY/Boston certified; has pending swap request |
+| Priya Patel | priya.patel@coastaleats.com | Staff1234! | Host — SF/LA certified; no Saturday evenings last 4 weeks (fairness demo) |
+| David Kim | david.kim@coastaleats.com | Staff1234! | Bartender + Supervisor — SF certified; 5 consecutive days worked |
+| Lisa Thompson | lisa.thompson@coastaleats.com | Staff1234! | Server — NY certified; has pending drop request |
