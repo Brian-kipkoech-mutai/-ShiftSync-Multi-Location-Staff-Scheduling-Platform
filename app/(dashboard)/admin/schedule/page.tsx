@@ -1,5 +1,4 @@
 import { requireRole } from "@/lib/auth";
-import { getUserScope } from "@/lib/scope";
 import { prisma } from "@/lib/prisma";
 import { ScheduleShell } from "@/components/schedule/schedule-shell";
 
@@ -10,10 +9,7 @@ interface PageProps {
 function getWeekStart(weekParam?: string): Date {
   if (weekParam) {
     const d = new Date(weekParam);
-    if (!isNaN(d.getTime())) {
-      d.setUTCHours(0, 0, 0, 0);
-      return d;
-    }
+    if (!isNaN(d.getTime())) { d.setUTCHours(0, 0, 0, 0); return d; }
   }
   const now = new Date();
   const day = now.getUTCDay();
@@ -24,21 +20,15 @@ function getWeekStart(weekParam?: string): Date {
   return monday;
 }
 
-export default async function ManagerSchedulePage({ searchParams }: PageProps) {
-  const user = await requireRole(["manager", "admin"]);
-  const scope = await getUserScope(user.id);
+export default async function AdminSchedulePage({ searchParams }: PageProps) {
+  await requireRole(["admin"]);
   const params = await searchParams;
-
   const weekStart = getWeekStart(params.week);
   const weekEnd = new Date(weekStart);
   weekEnd.setUTCDate(weekStart.getUTCDate() + 7);
 
-  // Locations this user can see
   const locations = await prisma.location.findMany({
-    where: scope.role === "admin" ? { isActive: true } : {
-      id: { in: scope.locationIds },
-      isActive: true,
-    },
+    where: { isActive: true },
     orderBy: { name: "asc" },
     select: { id: true, name: true, timezone: true },
   });
@@ -47,13 +37,9 @@ export default async function ManagerSchedulePage({ searchParams }: PageProps) {
     ? (Array.isArray(params.locationId) ? params.locationId : [params.locationId])
     : [];
 
-  const locationFilter = selectedIds.length > 0
-    ? { locationId: { in: selectedIds } }
-    : scope.role === "admin" ? {} : { locationId: { in: scope.locationIds } };
-
   const shifts = await prisma.shift.findMany({
     where: {
-      ...locationFilter,
+      ...(selectedIds.length > 0 ? { locationId: { in: selectedIds } } : {}),
       startUtc: { gte: weekStart, lt: weekEnd },
     },
     include: {
@@ -67,8 +53,7 @@ export default async function ManagerSchedulePage({ searchParams }: PageProps) {
     orderBy: { startUtc: "asc" },
   });
 
-  // Serialize dates for client
-  const serializedShifts = shifts.map((s) => ({
+  const serialized = shifts.map((s) => ({
     ...s,
     startUtc: s.startUtc.toISOString(),
     endUtc: s.endUtc.toISOString(),
@@ -82,18 +67,12 @@ export default async function ManagerSchedulePage({ searchParams }: PageProps) {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-5">
-        <h1 className="text-lg font-semibold text-slate-900">Schedule</h1>
-        <p className="text-xs text-slate-400">
-          {scope.role === "admin" ? "All locations" : locations.map((l) => l.name).join(" · ")}
-        </p>
-      </div>
-
+      <h1 className="text-lg font-semibold text-slate-900 mb-5">Schedule — All Locations</h1>
       <ScheduleShell
         weekStart={weekStart}
         locationIds={selectedIds}
         locations={locations}
-        initialShifts={serializedShifts as never}
+        initialShifts={serialized as never}
       />
     </div>
   );

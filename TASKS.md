@@ -2,8 +2,8 @@
 
 > Check off tasks as you complete them. At the start of each session, read this file first to know where you left off. Update the "Current session goal" line before starting work.
 
-**Current session goal:** _[Update this at the start of each session]_
-**Last completed:** _[Update this before ending each session]_
+**Current session goal:** Day 1 complete → begin Day 2 (Shift Management + Assignment)
+**Last completed:** Day 1 — Basic Schedule UI, constraint engine, auth, DB schema, all lib utilities
 
 ---
 
@@ -51,94 +51,94 @@
 ## Day 1 — Foundation
 
 ### Project Setup
-- [ ] Initialize Next.js 14 project: `pnpm create next-app@latest . --typescript --tailwind --app --src-dir=false --import-alias="@/*"`
-- [ ] Add `"packageManager": "pnpm@9.x.x"` to `package.json`
-- [ ] Install core deps: `pnpm add @supabase/supabase-js @supabase/ssr @tanstack/react-query @tanstack/react-query-devtools @prisma/client date-fns date-fns-tz zod`
-- [ ] Install dev deps: `pnpm add -D prisma tsx @types/node`
-- [ ] Initialize shadcn/ui: `pnpm dlx shadcn@latest init` (then run shadcn MCP init from Day 0 checklist if not done yet)
-- [ ] Add shadcn components: `pnpm dlx shadcn@latest add button card dialog dropdown-menu form input label select table toast tabs badge avatar calendar popover sheet alert checkbox switch separator`
-- [ ] Initialize Prisma: `pnpm prisma init`
-- [ ] Configure `schema.prisma` with `directUrl` field for migrations
-- [ ] Verify `.env.local` exists with all 5 variables filled in (copy from `.env.example`)
-- [ ] verify `.env.example` exist  with all 5 keys but empty values
-- [ ] Verify `.gitignore` excludes `.env.local`, `.env.*.local`, `.env`
-- [ ] Set up TanStack Query: create `/lib/query-client.ts` (staleTime 30s, gcTime 5min defaults)
-- [ ] Create `/app/providers.tsx` — QueryClientProvider + ReactQueryDevtools wrapper
-- [ ] Wrap `<Providers>` around children in `/app/layout.tsx`
-- [ ] Create base folder structure per CLAUDE.md
-- [ ] Initialize git repo, make first commit with the scaffold
+- [x] Initialize Next.js 14 project: `pnpm create next-app@latest . --typescript --tailwind --app --src-dir=false --import-alias="@/*"`
+- [x] Add `"packageManager": "pnpm@9.x.x"` to `package.json`
+- [x] Install core deps: `pnpm add @supabase/supabase-js @supabase/ssr @tanstack/react-query @tanstack/react-query-devtools @prisma/client date-fns date-fns-tz zod`
+- [x] Install dev deps: `pnpm add -D prisma tsx @types/node`
+- [x] Initialize shadcn/ui: `pnpm dlx shadcn@latest init`
+- [x] Add shadcn components: button card dialog dropdown-menu form input label select table toast tabs badge avatar calendar popover sheet alert checkbox switch separator
+- [x] Initialize Prisma: `pnpm prisma init`
+- [x] Configure `schema.prisma` with `directUrl` field for migrations
+- [x] Verify `.env.local` exists with all 5 variables filled in
+- [x] verify `.env.example` exist with all 5 keys but empty values
+- [x] Verify `.gitignore` excludes `.env.local`, `.env.*.local`, `.env`
+- [x] Set up TanStack Query: create `/lib/query-client.ts` (staleTime 30s, gcTime 5min defaults)
+- [x] Create `/app/providers.tsx` — QueryClientProvider + ReactQueryDevtools wrapper
+- [x] Wrap `<Providers>` around children in `/app/layout.tsx`
+- [x] Create base folder structure per CLAUDE.md
+- [x] Initialize git repo, make first commit with the scaffold
 - [ ] Push to GitHub
-- [ ] Create empty `DOCS.md` in `/docs` folder
-- [ ] Create initial `README.md` with project name, stack, and "WIP" status
+- [x] Create empty `DOCS.md` in `/docs` folder
+- [x] Create initial `README.md` with project name, stack, and "WIP" status
 
 ### Database Schema
-- [ ] `users` table — id, email, name, role (admin/manager/staff), homeTimezone, isActive, createdAt
-- [ ] `locations` table — id, name, address, timezone, isActive, createdAt
-- [ ] `skills` table — id, name (bartender, line cook, server, host, supervisor)
-- [ ] `user_skills` table — userId, skillId, createdAt
-- [ ] `location_certifications` table — userId, locationId, grantedAt, revokedAt (nullable), revokedBy (nullable)
-- [ ] `manager_location_assignments` table — managerId, locationId, createdAt
-- [ ] `availability_windows` table — userId, dayOfWeek, startTime, endTime (recurring, in user's home timezone)
-- [ ] `availability_exceptions` table — userId, date, startTime, endTime, isUnavailable (true = blocked, false = additional availability)
-- [ ] `desired_hours` table — userId, hoursPerWeek
-- [ ] `shifts` table — id, locationId, startUtc, endUtc, requiredSkillId, headcount, status (draft/published), isOvernight (computed), isPremium (computed), createdBy, createdAt, updatedAt
-- [ ] `shift_assignments` table — id, shiftId, userId, assignedBy, assignedAt, status (active/swapped_out/dropped/removed)
-- [ ] `swap_requests` table — id, shiftAssignmentId, requesterId, targetUserId (nullable for drops), type (swap/drop), status (pending/accepted/claimed/approved/rejected/cancelled/expired), createdAt, resolvedAt, claimedBy (nullable)
-- [ ] `notifications` table — id, userId, type, title, body, read, createdAt, metadata (jsonb with deepLink)
-- [ ] `notification_preferences` table — userId, inApp (default true), emailSimulation (default true)
-- [ ] `simulated_emails` table — id, userId, subject, body, sentAt
-- [ ] `audit_logs` table — id, entityType, entityId, action, beforeState (jsonb), afterState (jsonb), performedBy, performedAt, reason (nullable)
-- [ ] `overtime_overrides` table — id, userId, shiftId, weekStart, type (weekly_40h / consecutive_7th), approvedBy, reason, createdAt
-- [ ] `system_settings` table — key (PK), value, updatedAt, updatedBy
-- [ ] Run initial Prisma migration
+- [x] `users` table
+- [x] `locations` table
+- [x] `skills` table
+- [x] `user_skills` table
+- [x] `location_certifications` table
+- [x] `manager_location_assignments` table
+- [x] `availability_windows` table
+- [x] `availability_exceptions` table
+- [x] `desired_hours` table
+- [x] `shifts` table
+- [x] `shift_assignments` table
+- [x] `swap_requests` table
+- [x] `notifications` table
+- [x] `notification_preferences` table
+- [x] `simulated_emails` table
+- [x] `audit_logs` table
+- [x] `overtime_overrides` table
+- [x] `system_settings` table
+- [x] Run initial Prisma migration
 - [ ] Verify schema in Supabase dashboard
-- [ ] Insert initial system settings: `edit_cutoff_hours=48`, `premium_start_hour=17`, `premium_end_hour=24`
+- [x] Insert initial system settings: `edit_cutoff_hours=48`, `premium_start_hour=17`, `premium_end_hour=24`
 
 ### Auth & Role System
-- [ ] Configure Supabase Auth (email/password)
-- [ ] Login page (`/login`) — email + password, error messaging
-- [ ] Logout action
-- [ ] Auth middleware — protect all `/dashboard/*` routes
-- [ ] Role + scope detection on session (loads user's role + assigned locations)
-- [ ] Redirect after login based on role (admin → `/admin`, manager → `/manager`, staff → `/staff`)
-- [ ] Layout shells per role (sidebar navigation)
-- [ ] `/lib/scope.ts` — helpers: `getUserScope(userId)`, `assertCanAccessLocation(userId, locationId)`, `filterShiftsByScope(query, userId)`
+- [x] Configure Supabase Auth (email/password)
+- [x] Login page (`/login`) — email + password, error messaging
+- [x] Logout action
+- [x] Auth middleware (proxy.ts) — protect all `/dashboard/*`, `/admin/*`, `/manager/*`, `/staff/*` routes
+- [x] Role + scope detection on session (loads user's role + assigned locations)
+- [x] Redirect after login based on role (admin → `/admin`, manager → `/manager`, staff → `/staff`)
+- [x] Layout shells per role (sidebar navigation)
+- [x] `/lib/scope.ts` — helpers: `getUserScope(userId)`, `assertCanAccessLocation(userId, locationId)`, `buildLocationFilter(scope)`
 
 ### Constraint Engine (`/lib/constraints.ts`)
-- [ ] `checkDoubleBooking(userId, startUtc, endUtc, excludeShiftId?)` — returns violation or null
-- [ ] `checkRestPeriod(userId, startUtc, endUtc, excludeShiftId?)` — 10h minimum gap check
-- [ ] `checkSkillMatch(userId, requiredSkillId)` — returns violation or null
-- [ ] `checkLocationCertification(userId, locationId)` — returns violation if no cert or revoked
-- [ ] `checkAvailability(userId, locationId, startUtc, endUtc)` — converts to user's home tz, checks recurring windows + exceptions
-- [ ] `checkDailyHours(userId, date, additionalHours, locationTimezone)` — warn >8h, block >12h
-- [ ] `checkWeeklyHours(userId, weekStart, additionalHours)` — warn >35h, block >40h (with override path)
-- [ ] `checkConsecutiveDays(userId, date)` — warn on 6th, block on 7th (with override path)
-- [ ] `checkHeadcountAvailable(shiftId)` — ensures shift not already at headcount
-- [ ] `runAllConstraints(userId, shiftId)` — runs all checks, returns array of violations with severity
-- [ ] `suggestAlternatives(shiftId, failedUserId)` — returns up to 3 qualified, available, in-scope staff
-- [ ] Unit test each constraint with edge cases (overnight, DST, cross-location, revoked cert)
+- [x] `checkDoubleBooking(userId, startUtc, endUtc, excludeShiftId?)`
+- [x] `checkRestPeriod(userId, startUtc, endUtc, excludeShiftId?)` — 10h minimum gap check
+- [x] `checkSkillMatch(userId, requiredSkillId)`
+- [x] `checkLocationCertification(userId, locationId)`
+- [x] `checkAvailability(userId, locationId, startUtc, endUtc)`
+- [x] `checkDailyHours(userId, date, additionalHours, locationTimezone)` — warn >8h, block >12h
+- [x] `checkWeeklyHours(userId, weekStart, additionalHours)` — warn >35h, block >40h (with override path)
+- [x] `checkConsecutiveDays(userId, date)` — warn on 6th, block on 7th (with override path)
+- [x] `checkHeadcountAvailable(shiftId)`
+- [x] `runAllConstraints(userId, shiftId)`
+- [x] `suggestAlternatives(shiftId, failedUserId)` — returns up to 3 qualified, available, in-scope staff
+- [ ] Unit test each constraint with edge cases (deferred — no test framework; manual testing via seed data)
 
 ### Timezone Utilities (`/lib/timezone.ts`)
-- [ ] `toUtc(localDatetime, timezone)` — wraps date-fns-tz `zonedTimeToUtc`
-- [ ] `toZoned(utcDatetime, timezone)` — wraps date-fns-tz `utcToZonedTime`
-- [ ] `formatForLocation(utcDatetime, locationId)` — fetches location timezone, formats display
-- [ ] `formatRangeForLocation(startUtc, endUtc, locationId)` — formats range, indicating overnight
-- [ ] `isOvernightShift(startUtc, endUtc, locationTimezone)` — returns boolean
-- [ ] `getAvailabilityInUtc(window, userHomeTimezone, targetDate)` — converts recurring window to UTC for that date, handles DST
-- [ ] `getWeekBounds(date, timezone)` — returns UTC start/end of week (Mon–Sun) in given timezone
-- [ ] `getDayBounds(date, timezone)` — returns UTC start/end of calendar day in given timezone
+- [x] `toUtc(localDatetime, timezone)`
+- [x] `toZoned(utcDatetime, timezone)`
+- [x] `formatForLocation(utcDatetime, timezone)`
+- [x] `formatRangeForLocation(startUtc, endUtc, timezone)` — includes (+1) overnight indicator
+- [x] `isOvernightShift(startUtc, endUtc, locationTimezone)`
+- [x] `getAvailabilityInUtc(window, userHomeTimezone, targetDate)`
+- [x] `getWeekBounds(date, timezone)` — Mon–Sun
+- [x] `getDayBounds(date, timezone)`
 
 ### Audit Helper (`/lib/audit.ts`)
-- [ ] `logAudit({ entityType, entityId, action, before, after, performedBy, reason? })`
-- [ ] Wrap all mutation API routes with audit logging
+- [x] `logAudit({ entityType, entityId, action, before, after, performedBy, reason? })`
+- [ ] Wrap all mutation API routes with audit logging (done per-route as mutations are built)
 
 ### Basic Schedule UI
-- [ ] Weekly calendar grid component (7 columns, time rows)
-- [ ] Shift card component (shows time in location tz, location name, required skill, headcount filled X/Y, assigned staff)
-- [ ] Location selector (multi-select, scoped to user's accessible locations)
-- [ ] Week navigation (prev/next/today)
-- [ ] Draft vs published visual distinction (e.g., dashed border for draft)
-- [ ] Empty state for week with no shifts
+- [x] Weekly calendar grid component (7 columns)
+- [x] Shift card component (time in location tz, location name, required skill, headcount X/Y, assigned staff names)
+- [x] Location selector (multi-select, scoped to user's accessible locations)
+- [x] Week navigation (prev/next/today)
+- [x] Draft vs published visual distinction (dashed border = draft, teal = published, amber = premium, red = under-staffed)
+- [x] Empty state (— placeholder in each empty day column)
 
 ---
 
@@ -374,7 +374,7 @@
 
 | Session | Date | Completed | Next pickup |
 |---|---|---|---|
-| 1 | | | |
+| 1 | 2026-05-07 | Day 1 — full foundation: scaffold, DB schema, auth, constraint engine, timezone utils, schedule UI | Day 2: Shift create/edit/delete, assign staff modal, constraint UI, publish/unpublish |
 | 2 | | | |
 | 3 | | | |
 | 4 | | | |
