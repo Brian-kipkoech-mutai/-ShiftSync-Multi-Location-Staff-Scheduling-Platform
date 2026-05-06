@@ -7,7 +7,47 @@
 
 ---
 
- 
+## Day 0 — Pre-Build Setup (do this BEFORE opening Claude Code)
+
+### Supabase project
+- [ ] Create Supabase project at supabase.com (region near you, free tier)
+- [ ] Copy: Project URL, anon key, service_role key (Settings → API)
+- [ ] Copy: pooled connection string (Settings → Database → Connection string → Transaction mode, port 6543) — append `?pgbouncer=true&connection_limit=1`
+- [ ] Copy: direct connection string (Settings → Database → Connection string → Session mode, port 5432)
+- [ ] Save all 5 values somewhere safe — needed for `.env.local`
+
+### Vercel project
+- [ ] Create empty GitHub repo (public)
+- [ ] Create Vercel project, link to the repo (do not deploy yet — repo is empty)
+
+### Local machine
+- [ ] Install Node.js 20+
+- [ ] Install pnpm globally: `npm install -g pnpm`
+- [ ] Install Claude Code (terminal or VS Code extension)
+- [ ] Place `CLAUDE.md`, `TASKS.md`, and `README.md` in repo root before first session
+
+### shadcn MCP setup (do this AFTER `pnpm dlx shadcn@latest init` runs in Day 1)
+- [ ] Run `pnpm dlx shadcn@latest mcp init --client claude` in project root
+- [ ] Open the generated `.mcp.json` and verify it includes `"type": "stdio"` — if missing, add it manually:
+  ```json
+  {
+    "mcpServers": {
+      "shadcn": {
+        "type": "stdio",
+        "command": "npx",
+        "args": ["shadcn@latest", "mcp"]
+      }
+    }
+  }
+  ```
+- [ ] (Recommended) Create a GitHub personal access token (read-only, public repo scope) at github.com/settings/tokens — increases MCP rate limit from 60/hr to 5000/hr
+- [ ] Export the token in your shell: `export GITHUB_PERSONAL_ACCESS_TOKEN=<your_token_here>`
+- [ ] Restart Claude Code completely
+- [ ] Inside Claude Code, run `/mcp` — confirm `shadcn ● connected` with tools listed
+- [ ] If pending or disconnected: re-check `.mcp.json` has `type: stdio`, restart again
+
+---
+
 ## Day 1 — Foundation
 
 ### Project Setup
@@ -19,8 +59,8 @@
 - [ ] Add shadcn components: `pnpm dlx shadcn@latest add button card dialog dropdown-menu form input label select table toast tabs badge avatar calendar popover sheet alert checkbox switch separator`
 - [ ] Initialize Prisma: `pnpm prisma init`
 - [ ] Configure `schema.prisma` with `directUrl` field for migrations
-- [ ] Create `.env.local` with all 5 vars from Day 0
-- [ ] Create `.env.example` with all 5 keys but empty values
+- [ ] Verify `.env.local` exists with all 5 variables filled in (copy from `.env.example`)
+- [ ] verify `.env.example` exist  with all 5 keys but empty values
 - [ ] Verify `.gitignore` excludes `.env.local`, `.env.*.local`, `.env`
 - [ ] Set up TanStack Query: create `/lib/query-client.ts` (staleTime 30s, gcTime 5min defaults)
 - [ ] Create `/app/providers.tsx` — QueryClientProvider + ReactQueryDevtools wrapper
