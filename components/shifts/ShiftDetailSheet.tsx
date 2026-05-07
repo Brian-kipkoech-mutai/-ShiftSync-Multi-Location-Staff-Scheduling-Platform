@@ -41,7 +41,10 @@ export function ShiftDetailSheet({ shift, onClose, locations, skills, canManage 
   return (
     <>
       <Sheet open={!!shift} onOpenChange={(v) => !v && onClose()}>
-        <SheetContent className="w-80 sm:w-96 flex flex-col">
+        <SheetContent
+          className="w-80 sm:w-96 flex flex-col"
+          onInteractOutside={(e) => { if (editOpen || assignOpen) e.preventDefault(); }}
+        >
           <SheetHeader>
             <SheetTitle className="text-base">Shift Details</SheetTitle>
           </SheetHeader>

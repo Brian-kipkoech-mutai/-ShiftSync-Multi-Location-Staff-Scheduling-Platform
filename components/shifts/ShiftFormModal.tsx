@@ -97,7 +97,7 @@ export function ShiftFormModal({ open, onClose, shift, defaultDate, locations, s
                 <Select onValueChange={field.onChange} value={field.value} disabled={isEdit}>
                   <FormControl><SelectTrigger className="h-9"><SelectValue placeholder="Select location" /></SelectTrigger></FormControl>
                   <SelectContent>
-                    {locations.map((l) => <SelectItem key={l.id} value={l.id} label={l.name}>{l.name}</SelectItem>)}
+                    {locations.map((l) => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -145,7 +145,7 @@ export function ShiftFormModal({ open, onClose, shift, defaultDate, locations, s
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl><SelectTrigger className="h-9"><SelectValue placeholder="Select skill" /></SelectTrigger></FormControl>
                   <SelectContent>
-                    {skills.map((s) => <SelectItem key={s.id} value={s.id} label={s.name} className="capitalize">{s.name}</SelectItem>)}
+                    {skills.map((s) => <SelectItem key={s.id} value={s.id} className="capitalize">{s.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
                 <FormMessage />
