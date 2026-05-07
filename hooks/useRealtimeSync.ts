@@ -2,7 +2,35 @@
 
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { createClient } from "@/lib/supabase";
+
+function playNotificationChime() {
+  try {
+    const ctx = new AudioContext();
+    const gain = ctx.createGain();
+    gain.connect(ctx.destination);
+
+    // Two-tone Glass chime: high note then slightly lower
+    const notes = [1046.5, 830.6]; // C6, Ab5
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      osc.connect(gain);
+      const start = ctx.currentTime + i * 0.12;
+      gain.gain.setValueAtTime(0, start);
+      gain.gain.linearRampToValueAtTime(0.18, start + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.6);
+      osc.start(start);
+      osc.stop(start + 0.6);
+    });
+
+    setTimeout(() => ctx.close(), 1500);
+  } catch {
+    // AudioContext unavailable (e.g. SSR or blocked by browser policy)
+  }
+}
 
 export function useRealtimeSync(userId: string) {
   const qc = useQueryClient();
@@ -29,7 +57,16 @@ export function useRealtimeSync(userId: string) {
 
         // On new notifications only: map type → query keys so pages refresh automatically
         if (payload.eventType !== "INSERT") return;
-        const type = (payload.new as { type?: string }).type;
+        const n = payload.new as { type?: string; title?: string; body?: string };
+
+        // Sonner toast + chime for every incoming notification
+        toast(n.title ?? "New notification", {
+          description: n.body,
+          duration: 5000,
+        });
+        playNotificationChime();
+
+        const type = n.type;
 
         switch (type) {
           case "shift_assigned":
