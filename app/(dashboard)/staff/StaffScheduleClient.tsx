@@ -124,11 +124,7 @@ export function StaffScheduleClient({ initialAssignments, userId }: { initialAss
                   <p className="text-xs text-muted-foreground">Select staff to swap with:</p>
                   <Select onValueChange={(v) => setTargetUserId(typeof v === "string" ? v : "")} value={targetUserId}>
                     <SelectTrigger className="h-9 w-full">
-                      <SelectValue placeholder="Select staff member…">
-                        {(value: string | null) =>
-                          value ? (coworkers.find((c) => c.id === value)?.name ?? value) : null
-                        }
-                      </SelectValue>
+                      <SelectValue placeholder="Select staff member…" />
                     </SelectTrigger>
                     <SelectContent>
                       {coworkersLoading ? (
