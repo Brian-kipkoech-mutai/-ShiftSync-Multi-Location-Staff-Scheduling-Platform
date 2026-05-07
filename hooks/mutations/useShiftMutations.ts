@@ -33,7 +33,14 @@ export function useEditShift() {
       if (!res.ok) { const e = await res.json(); throw new Error(e.error ?? "Failed to update shift"); }
       return res.json();
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["shifts"] }); toast.success("Shift updated"); },
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ["shifts"] });
+      toast.success("Shift updated");
+      if (data.disqualifiedAssignees?.length) {
+        const names = (data.disqualifiedAssignees as { name: string }[]).map((a) => a.name).join(", ");
+        toast.warning(`Skill mismatch — reassignment needed: ${names}`, { duration: 8000 });
+      }
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 }

@@ -38,6 +38,7 @@ export function useRealtimeSync(userId: string) {
           case "shift_deleted":
           case "schedule_published":
           case "schedule_unpublished":
+          case "skill_mismatch_warning":
             qc.invalidateQueries({ queryKey: ["shifts"] });
             qc.invalidateQueries({ queryKey: ["my-shifts"] });
             break;

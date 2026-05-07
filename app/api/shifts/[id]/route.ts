@@ -86,8 +86,42 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     await notify(a.userId, "shift_edited", "Your shift was updated", `A shift you're assigned to at ${shift.location.name} has been updated.`, { shiftId: id });
   }
 
+  // If the required skill changed, check which assignees no longer qualify
+  const skillChanged = requiredSkillId && requiredSkillId !== shift.requiredSkillId;
+  let disqualifiedAssignees: { id: string; name: string }[] = [];
+
+  if (skillChanged && shift.assignments.length > 0) {
+    const assigneeIds = shift.assignments.map((a) => a.userId);
+    const holdersOfNewSkill = await prisma.userSkill.findMany({
+      where: { userId: { in: assigneeIds }, skillId: requiredSkillId },
+      select: { userId: true },
+    });
+    const holderIds = new Set(holdersOfNewSkill.map((s) => s.userId));
+    disqualifiedAssignees = shift.assignments
+      .filter((a) => !holderIds.has(a.userId))
+      .map((a) => ({ id: a.userId, name: a.user.name }));
+
+    if (disqualifiedAssignees.length > 0) {
+      const newSkill = updated.requiredSkill;
+      const names = disqualifiedAssignees.map((a) => a.name).join(", ");
+      const managerMsg = `Skill changed to "${newSkill.name}" on the shift at ${shift.location.name}. The following assigned staff no longer qualify: ${names}. Please reassign.`;
+
+      // Notify the editing manager immediately
+      await notify(user.id, "skill_mismatch_warning", "Assigned staff no longer qualify", managerMsg, { shiftId: id });
+
+      // Also notify all other managers at this location
+      const locationManagers = await prisma.managerLocationAssignment.findMany({
+        where: { locationId: shift.locationId, managerId: { not: user.id } },
+        select: { managerId: true },
+      });
+      for (const m of locationManagers) {
+        await notify(m.managerId, "skill_mismatch_warning", "Assigned staff no longer qualify", managerMsg, { shiftId: id });
+      }
+    }
+  }
+
   await logAudit({ entityType: "shift", entityId: id, action: "edit", before, after: updated, performedBy: user.id });
-  return NextResponse.json(updated);
+  return NextResponse.json({ ...updated, disqualifiedAssignees });
 }
 
 export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
