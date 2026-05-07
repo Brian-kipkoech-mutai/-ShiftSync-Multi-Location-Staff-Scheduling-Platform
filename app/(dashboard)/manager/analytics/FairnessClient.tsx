@@ -34,6 +34,21 @@ function FairnessScoreBadge({ score }: { score: number | null }) {
   );
 }
 
+function StaffRowSkeleton() {
+  return (
+    <div className="bg-card border border-border rounded-md px-3 py-3 space-y-2 animate-pulse">
+      <div className="grid grid-cols-[1fr_auto_auto_auto] gap-3 items-center">
+        <div className="h-3.5 bg-muted rounded w-28" />
+        <div className="h-3.5 bg-muted rounded w-10" />
+        <div className="h-3.5 bg-muted rounded w-6" />
+        <div className="h-3.5 bg-muted rounded w-12" />
+      </div>
+      <div className="h-1 bg-muted rounded-full" />
+      <div className="h-1 bg-muted rounded-full" />
+    </div>
+  );
+}
+
 export function FairnessClient({ initialStaff, initialFairnessScore, initialMean, locations, initialWeeks }: Props) {
   const [weeks, setWeeks] = useState(initialWeeks);
   const [locationId, setLocationId] = useState<string>("");
@@ -56,9 +71,9 @@ export function FairnessClient({ initialStaff, initialFairnessScore, initialMean
     staleTime: 30_000,
   });
 
-  const staff = data?.staff ?? initialStaff;
-  const fairnessScore = data?.fairnessScore ?? initialFairnessScore;
-  const mean = data?.mean ?? initialMean;
+  const staff = data?.staff ?? [];
+  const fairnessScore = data?.fairnessScore ?? null;
+  const mean = data?.mean ?? 0;
   const maxPremium = Math.max(...(staff.length ? staff.map((s) => s.premiumShifts) : [1]), 1);
   const maxHours = Math.max(...(staff.length ? staff.map((s) => s.totalHours) : [1]), 1);
 
@@ -73,7 +88,9 @@ export function FairnessClient({ initialStaff, initialFairnessScore, initialMean
               onClick={() => setWeeks(w)}
               className={cn(
                 "px-3 py-1 rounded text-xs border transition-colors",
-                weeks === w ? "bg-teal-900/40 border-teal-800/40 text-teal-400" : "border-border text-muted-foreground hover:text-foreground"
+                weeks === w
+                  ? "bg-teal-900/40 border-teal-800/40 text-teal-400"
+                  : "border-border text-muted-foreground hover:text-foreground"
               )}
             >
               {w}w
@@ -86,22 +103,29 @@ export function FairnessClient({ initialStaff, initialFairnessScore, initialMean
           onChange={(e) => setLocationId(e.target.value)}
         >
           <option value="">All locations</option>
-          {locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+          {locations.map((l) => (
+            <option key={l.id} value={l.id}>{l.name}</option>
+          ))}
         </select>
-        {isFetching && (
-          <span className="text-xs text-muted-foreground animate-pulse">Updating…</span>
-        )}
       </div>
 
       {/* Fairness score card */}
       <div className="bg-card border border-border rounded-md p-4 flex items-center gap-6">
         <div>
           <p className="text-xs text-muted-foreground mb-1">Fairness Score</p>
-          <FairnessScoreBadge score={fairnessScore} />
+          {isFetching ? (
+            <div className="h-7 w-16 bg-muted rounded animate-pulse" />
+          ) : (
+            <FairnessScoreBadge score={fairnessScore} />
+          )}
         </div>
         <div className="border-l border-border pl-6">
           <p className="text-xs text-muted-foreground mb-0.5">Avg premium shifts/person</p>
-          <p className="text-xl font-mono font-medium">{mean}</p>
+          {isFetching ? (
+            <div className="h-6 w-8 bg-muted rounded animate-pulse" />
+          ) : (
+            <p className="text-xl font-mono font-medium">{mean}</p>
+          )}
         </div>
         <div className="border-l border-border pl-6 flex-1 hidden sm:block">
           <p className="text-xs text-muted-foreground">
@@ -113,25 +137,22 @@ export function FairnessClient({ initialStaff, initialFairnessScore, initialMean
       </div>
 
       {/* Staff table */}
-      {staff.length === 0 && !isFetching ? (
-        <p className="text-sm text-muted-foreground">No published shifts in this period.</p>
-      ) : staff.length === 0 && isFetching ? (
+      {isFetching ? (
         <div className="space-y-2">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-card border border-border rounded-md px-3 py-3 space-y-2 animate-pulse">
-              <div className="grid grid-cols-[1fr_auto_auto_auto] gap-3 items-center">
-                <div className="h-3.5 bg-muted rounded w-32" />
-                <div className="h-3.5 bg-muted rounded w-10" />
-                <div className="h-3.5 bg-muted rounded w-6" />
-                <div className="h-3.5 bg-muted rounded w-12" />
-              </div>
-              <div className="h-1 bg-muted rounded-full" />
-              <div className="h-1 bg-muted rounded-full" />
-            </div>
+          <div className="grid grid-cols-[1fr_auto_auto_auto] gap-3 px-3 py-1.5 text-[10px] text-muted-foreground uppercase tracking-wide">
+            <span>Staff Member</span>
+            <span className="text-right">Total hrs</span>
+            <span className="text-right">Premium</span>
+            <span className="text-right">Target</span>
+          </div>
+          {[...Array(staff.length || 5)].map((_, i) => (
+            <StaffRowSkeleton key={i} />
           ))}
         </div>
+      ) : staff.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No published shifts in this period.</p>
       ) : (
-        <div className={cn("space-y-2 transition-opacity duration-150", isFetching && "opacity-50 pointer-events-none")}>
+        <div className="space-y-2">
           <div className="grid grid-cols-[1fr_auto_auto_auto] gap-3 px-3 py-1.5 text-[10px] text-muted-foreground uppercase tracking-wide">
             <span>Staff Member</span>
             <span className="text-right">Total hrs</span>
@@ -154,14 +175,12 @@ export function FairnessClient({ initialStaff, initialFairnessScore, initialMean
                   {s.desiredHoursPerWeek != null ? `${s.desiredHoursPerWeek}h/wk` : "—"}
                 </span>
               </div>
-              {/* Premium bar */}
               <div className="h-1 bg-muted rounded-full overflow-hidden">
                 <div
                   className="h-full bg-amber-500 rounded-full"
                   style={{ width: `${(s.premiumShifts / maxPremium) * 100}%` }}
                 />
               </div>
-              {/* Hours bar */}
               <div className="h-1 bg-muted rounded-full overflow-hidden">
                 <div
                   className="h-full bg-teal-500 rounded-full"
