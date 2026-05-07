@@ -117,6 +117,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       for (const m of locationManagers) {
         await notify(m.managerId, "skill_mismatch_warning", "Assigned staff no longer qualify", managerMsg, { shiftId: id });
       }
+
+      // Notify each disqualified staff member
+      for (const a of disqualifiedAssignees) {
+        await notify(a.id, "skill_mismatch_warning", "Your shift assignment may need updating", `The required skill for your shift at ${shift.location.name} has been changed to "${newSkill.name}". You may not currently hold this skill — your manager will be in touch about reassignment.`, { shiftId: id });
+      }
     }
   }
 
