@@ -28,8 +28,7 @@ export function OnDutyClient({ initialAssignments }: { initialAssignments: OnDut
       return res.json();
     },
     initialData: initialAssignments,
-    refetchInterval: 60_000,
-    staleTime: 30_000,
+    staleTime: 0,
   });
 
   // Group by location

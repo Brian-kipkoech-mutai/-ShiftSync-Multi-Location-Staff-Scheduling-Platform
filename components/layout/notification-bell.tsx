@@ -31,7 +31,6 @@ export function NotificationBell({ userId }: { userId: string }) {
       if (!res.ok) throw new Error("Failed to load notifications");
       return res.json();
     },
-    refetchInterval: 30000,
   });
 
   useEffect(() => {
@@ -42,7 +41,7 @@ export function NotificationBell({ userId }: { userId: string }) {
       return;
     }
 
-    // On every subsequent refetch (polling or realtime), toast any new notification
+    // On every realtime-triggered refetch, toast any new notification
     notifications.forEach((n) => {
       if (!seenIds.current.has(n.id)) {
         seenIds.current.add(n.id);
