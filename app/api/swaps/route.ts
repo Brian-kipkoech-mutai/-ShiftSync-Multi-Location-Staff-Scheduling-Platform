@@ -110,12 +110,24 @@ export async function POST(request: NextRequest) {
 
   await logAudit({ entityType: "swap_request", entityId: swap.id, action: "create", after: swap, performedBy: user.id });
 
+  // Notify all managers at this location immediately
+  const locationManagers = await prisma.managerLocationAssignment.findMany({
+    where: { locationId: assignment.shift.locationId },
+    select: { managerId: true },
+  });
+  for (const m of locationManagers) {
+    const notifTitle = type === "swap" ? "New swap request" : "New drop request";
+    const notifBody = type === "swap"
+      ? `${user.name} wants to swap their shift at ${assignment.shift.location.name}. Awaiting target staff response.`
+      : `${user.name} has dropped their shift at ${assignment.shift.location.name}. Awaiting a replacement to claim it.`;
+    await notify(m.managerId, type === "swap" ? "swap_request_created" : "drop_request_created", notifTitle, notifBody, { swapId: swap.id });
+  }
+
   if (type === "swap" && targetUserId) {
     await notify(targetUserId, "swap_request_received", "Swap request", `${user.name} wants to swap their shift at ${assignment.shift.location.name} with you.`, { swapId: swap.id });
   }
 
   if (type === "drop") {
-    // Notify qualified staff at this location
     const qualifiedStaff = await prisma.user.findMany({
       where: {
         role: "staff",

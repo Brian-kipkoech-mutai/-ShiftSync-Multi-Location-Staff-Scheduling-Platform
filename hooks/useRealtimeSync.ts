@@ -24,8 +24,68 @@ export function useRealtimeSync(userId: string) {
         qc.invalidateQueries({ queryKey: ["swaps"] });
         qc.invalidateQueries({ queryKey: ["my-shifts"] });
       })
-      .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` }, () => {
+      .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` }, (payload) => {
         qc.invalidateQueries({ queryKey: ["notifications", userId] });
+
+        // On new notifications only: map type → query keys so pages refresh automatically
+        if (payload.eventType !== "INSERT") return;
+        const type = (payload.new as { type?: string }).type;
+
+        switch (type) {
+          case "shift_assigned":
+          case "shift_unassigned":
+          case "shift_edited":
+          case "shift_deleted":
+          case "schedule_published":
+          case "schedule_unpublished":
+            qc.invalidateQueries({ queryKey: ["shifts"] });
+            qc.invalidateQueries({ queryKey: ["my-shifts"] });
+            break;
+
+          case "swap_request_created":
+          case "swap_request_received":
+          case "swap_awaiting_approval":
+          case "drop_request_created":
+          case "drop_awaiting_approval":
+            qc.invalidateQueries({ queryKey: ["swaps"] });
+            break;
+
+          case "swap_accepted":
+          case "swap_auto_cancelled":
+          case "swap_cancelled":
+          case "swap_rejected":
+            qc.invalidateQueries({ queryKey: ["swaps"] });
+            qc.invalidateQueries({ queryKey: ["my-shifts"] });
+            break;
+
+          case "swap_approved":
+            qc.invalidateQueries({ queryKey: ["swaps"] });
+            qc.invalidateQueries({ queryKey: ["my-shifts"] });
+            qc.invalidateQueries({ queryKey: ["shifts"] });
+            break;
+
+          case "drop_available":
+            qc.invalidateQueries({ queryKey: ["available-drops"] });
+            break;
+
+          case "drop_approved":
+            qc.invalidateQueries({ queryKey: ["swaps"] });
+            qc.invalidateQueries({ queryKey: ["available-drops"] });
+            qc.invalidateQueries({ queryKey: ["my-shifts"] });
+            qc.invalidateQueries({ queryKey: ["shifts"] });
+            break;
+
+          case "drop_rejected":
+          case "drop_cancelled":
+            qc.invalidateQueries({ queryKey: ["swaps"] });
+            qc.invalidateQueries({ queryKey: ["available-drops"] });
+            break;
+
+          case "overtime_warning":
+          case "overtime_override":
+            qc.invalidateQueries({ queryKey: ["shifts"] });
+            break;
+        }
       })
       .subscribe();
 
