@@ -27,11 +27,10 @@ export default async function AdminSchedulePage({ searchParams }: PageProps) {
   const weekEnd = new Date(weekStart);
   weekEnd.setUTCDate(weekStart.getUTCDate() + 7);
 
-  const locations = await prisma.location.findMany({
-    where: { isActive: true },
-    orderBy: { name: "asc" },
-    select: { id: true, name: true, timezone: true },
-  });
+  const [locations, skills] = await Promise.all([
+    prisma.location.findMany({ where: { isActive: true }, orderBy: { name: "asc" }, select: { id: true, name: true, timezone: true } }),
+    prisma.skill.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+  ]);
 
   const selectedIds = params.locationId
     ? (Array.isArray(params.locationId) ? params.locationId : [params.locationId])
@@ -45,10 +44,7 @@ export default async function AdminSchedulePage({ searchParams }: PageProps) {
     include: {
       location: true,
       requiredSkill: true,
-      assignments: {
-        where: { status: "active" },
-        include: { user: { select: { id: true, name: true } } },
-      },
+      assignments: { where: { status: "active" }, include: { user: { select: { id: true, name: true } } } },
     },
     orderBy: { startUtc: "asc" },
   });
@@ -59,10 +55,7 @@ export default async function AdminSchedulePage({ searchParams }: PageProps) {
     endUtc: s.endUtc.toISOString(),
     createdAt: s.createdAt.toISOString(),
     updatedAt: s.updatedAt.toISOString(),
-    assignments: s.assignments.map((a) => ({
-      ...a,
-      assignedAt: a.assignedAt.toISOString(),
-    })),
+    assignments: s.assignments.map((a) => ({ ...a, assignedAt: a.assignedAt.toISOString() })),
   }));
 
   return (
@@ -70,9 +63,12 @@ export default async function AdminSchedulePage({ searchParams }: PageProps) {
       <h1 className="text-lg font-semibold text-foreground mb-5">Schedule — All Locations</h1>
       <ScheduleShell
         weekStart={weekStart}
+        weekStartISO={weekStart.toISOString()}
         locationIds={selectedIds}
         locations={locations}
+        skills={skills}
         initialShifts={serialized as never}
+        canManage={true}
       />
     </div>
   );

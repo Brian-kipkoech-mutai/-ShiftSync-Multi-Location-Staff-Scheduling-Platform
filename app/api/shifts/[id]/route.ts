@@ -1,0 +1,119 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getSessionUser } from "@/lib/auth";
+import { getUserScope } from "@/lib/scope";
+import { prisma } from "@/lib/prisma";
+import { parseShiftTimes, isPremiumShift } from "@/lib/timezone";
+import { logAudit } from "@/lib/audit";
+import { notify } from "@/lib/notifications";
+import { addHours } from "date-fns";
+
+async function getEditCutoffHours(): Promise<number> {
+  const s = await prisma.systemSettings.findUnique({ where: { key: "edit_cutoff_hours" } });
+  return s ? parseInt(s.value) : 48;
+}
+
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const user = await getSessionUser();
+  if (user.role === "staff") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const scope = await getUserScope(user.id);
+
+  const shift = await prisma.shift.findUnique({
+    where: { id },
+    include: { location: true, assignments: { where: { status: "active" }, include: { user: true } } },
+  });
+  if (!shift) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  if (scope.role !== "admin" && !scope.locationIds.includes(shift.locationId)) {
+    return NextResponse.json({ error: "Access denied" }, { status: 403 });
+  }
+
+  const cutoffHours = await getEditCutoffHours();
+  if (addHours(new Date(), cutoffHours) > shift.startUtc) {
+    return NextResponse.json({ error: `Shift starts within ${cutoffHours}h — edits are locked.` }, { status: 409 });
+  }
+
+  const body = await request.json();
+  const { date, startTime, endTime, requiredSkillId, headcount } = body;
+
+  const before = { ...shift, location: undefined, assignments: undefined };
+  let startUtc = shift.startUtc;
+  let endUtc = shift.endUtc;
+  let isOvernight = shift.isOvernight;
+  let isPremium = shift.isPremium;
+
+  if (date || startTime || endTime) {
+    const location = shift.location;
+    const localDate = date ?? (startUtc.toISOString().split("T")[0]);
+    const localStart = startTime ?? startUtc.toISOString().split("T")[1].slice(0, 5);
+    const localEnd = endTime ?? endUtc.toISOString().split("T")[1].slice(0, 5);
+    const parsed = parseShiftTimes(localDate, localStart, localEnd, location.timezone);
+    startUtc = parsed.startUtc;
+    endUtc = parsed.endUtc;
+    isOvernight = parsed.isOvernight;
+    isPremium = isPremiumShift(startUtc, location.timezone);
+  }
+
+  const updated = await prisma.shift.update({
+    where: { id },
+    data: {
+      startUtc,
+      endUtc,
+      isOvernight,
+      isPremium,
+      ...(requiredSkillId ? { requiredSkillId } : {}),
+      ...(headcount ? { headcount: Number(headcount) } : {}),
+    },
+    include: { location: true, requiredSkill: true, assignments: { where: { status: "active" }, include: { user: { select: { id: true, name: true } } } } },
+  });
+
+  // Auto-cancel pending swaps for this shift
+  const pendingSwaps = await prisma.swapRequest.findMany({
+    where: { shiftAssignment: { shiftId: id }, status: { in: ["pending", "accepted", "claimed"] } },
+    include: { requester: true, target: true, claimer: true },
+  });
+  for (const swap of pendingSwaps) {
+    await prisma.swapRequest.update({ where: { id: swap.id }, data: { status: "cancelled" } });
+    await logAudit({ entityType: "swap_request", entityId: swap.id, action: "auto-cancel-on-edit", before: swap, after: { status: "cancelled" }, performedBy: user.id });
+    const msg = `Your ${swap.type} request was auto-cancelled because the shift was edited.`;
+    await notify(swap.requesterId, "swap_auto_cancelled", "Swap request cancelled", msg, { shiftId: id });
+    if (swap.targetUserId) await notify(swap.targetUserId, "swap_auto_cancelled", "Swap request cancelled", msg, { shiftId: id });
+    if (swap.claimedBy) await notify(swap.claimedBy, "swap_auto_cancelled", "Swap request cancelled", msg, { shiftId: id });
+  }
+
+  // Notify assigned staff of shift change
+  for (const a of shift.assignments) {
+    await notify(a.userId, "shift_edited", "Your shift was updated", `A shift you're assigned to at ${shift.location.name} has been updated.`, { shiftId: id });
+  }
+
+  await logAudit({ entityType: "shift", entityId: id, action: "edit", before, after: updated, performedBy: user.id });
+  return NextResponse.json(updated);
+}
+
+export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const user = await getSessionUser();
+  if (user.role === "staff") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const scope = await getUserScope(user.id);
+
+  const shift = await prisma.shift.findUnique({
+    where: { id },
+    include: { assignments: { where: { status: "active" }, include: { user: true } } },
+  });
+  if (!shift) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (scope.role !== "admin" && !scope.locationIds.includes(shift.locationId)) {
+    return NextResponse.json({ error: "Access denied" }, { status: 403 });
+  }
+  if (shift.status !== "draft") {
+    return NextResponse.json({ error: "Only draft shifts can be deleted." }, { status: 409 });
+  }
+
+  // Notify assigned staff before deletion
+  for (const a of shift.assignments) {
+    await notify(a.userId, "shift_deleted", "A shift was removed", `A draft shift you were assigned to has been deleted.`, { shiftId: id });
+  }
+
+  await logAudit({ entityType: "shift", entityId: id, action: "delete", before: shift, performedBy: user.id });
+  await prisma.shift.delete({ where: { id } });
+  return NextResponse.json({ ok: true });
+}

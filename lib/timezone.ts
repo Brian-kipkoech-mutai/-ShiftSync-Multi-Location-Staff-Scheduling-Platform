@@ -101,6 +101,26 @@ export function getDayBounds(
   };
 }
 
+export function parseShiftTimes(
+  dateStr: string,
+  startTimeStr: string,
+  endTimeStr: string,
+  locationTimezone: string
+): { startUtc: Date; endUtc: Date; isOvernight: boolean } {
+  const [startH, startM] = startTimeStr.split(":").map(Number);
+  const [endH, endM] = endTimeStr.split(":").map(Number);
+  const isOvernight = endH * 60 + endM < startH * 60 + startM;
+
+  const startUtc = fromZonedTime(`${dateStr}T${startTimeStr}:00`, locationTimezone);
+
+  const endDateStr = isOvernight
+    ? format(addDays(startOfDay(new Date(`${dateStr}T12:00:00Z`)), 1), "yyyy-MM-dd")
+    : dateStr;
+  const endUtc = fromZonedTime(`${endDateStr}T${endTimeStr}:00`, locationTimezone);
+
+  return { startUtc, endUtc, isOvernight };
+}
+
 export function isPremiumShift(startUtc: Date, timezone: string): boolean {
   const zoned = toZonedTime(startUtc, timezone);
   const dayOfWeek = zoned.getDay(); // 0=Sun, 6=Sat, 5=Fri

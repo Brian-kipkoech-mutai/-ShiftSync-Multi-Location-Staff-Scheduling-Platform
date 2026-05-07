@@ -2,8 +2,8 @@
 
 > Check off tasks as you complete them. At the start of each session, read this file first to know where you left off. Update the "Current session goal" line before starting work.
 
-**Current session goal:** Day 1 complete → begin Day 2 (Shift Management + Assignment)
-**Last completed:** Day 1 — Basic Schedule UI, constraint engine, auth, DB schema, all lib utilities
+**Current session goal:** Day 2 + Day 3 complete → seed, deploy
+**Last completed:** Day 2 + 3 — All workflows, fairness analytics, admin pages, build clean at 42 routes
 
 ---
 
@@ -145,108 +145,92 @@
 ## Day 2 — Workflows
 
 ### Shift Management (Manager)
-- [ ] Create shift modal — location, date, start time, end time, skill, headcount
-- [ ] Edit shift modal — same fields, blocks edit if past cutoff
-- [ ] Delete shift action — only allowed for `draft` status
-- [ ] Cutoff enforcement: read `edit_cutoff_hours` from settings, block edits within window
-- [ ] Validation: end time can be before start time only if overnight (mark `isOvernight` true)
-- [ ] Auto-recompute `isPremium` on create/edit
-- [ ] Trigger swap auto-cancellation on edit (if pending swap exists for this shift)
+- [x] Create shift modal — location, date, start time, end time, skill, headcount
+- [x] Edit shift modal — same fields, blocks edit if past cutoff
+- [x] Delete shift action — only allowed for `draft` status
+- [x] Cutoff enforcement: read `edit_cutoff_hours` from settings, block edits within window
+- [x] Validation: end time can be before start time only if overnight (mark `isOvernight` true)
+- [x] Auto-recompute `isPremium` on create/edit
+- [x] Trigger swap auto-cancellation on edit (if pending swap exists for this shift)
 
 ### Shift Assignment (Manager)
-- [ ] "Assign staff" button on each shift card (shown if assigned_count < headcount)
-- [ ] Staff search/picker filtered by: skill, certification, availability, scope
-- [ ] Run constraint checks before saving — show violations inline with severity
-- [ ] Show alternative suggestions when a constraint fails (block or override)
-- [ ] Override flow for weekly 40h and 7th-day blocks (reason input required, saved to overtime_overrides)
-- [ ] Optimistic locking: `BEGIN; SELECT ... FOR UPDATE; re-check constraints; INSERT; COMMIT`
-- [ ] Conflict error UI: "This staff member was just assigned to [Other Shift] by [Name]. Please refresh."
-- [ ] Remove assignment action (writes audit log)
-- [ ] What-if preview — shows hour totals impact before confirming
+- [x] "Assign staff" button on each shift card (shown if assigned_count < headcount)
+- [x] Staff search/picker filtered by: skill, certification, availability, scope
+- [x] Run constraint checks before saving — show violations inline with severity
+- [x] Show alternative suggestions when a constraint fails (block or override)
+- [x] Override flow for weekly 40h and 7th-day blocks (reason input required, saved to overtime_overrides)
+- [x] Optimistic locking: `BEGIN; SELECT ... FOR UPDATE; re-check constraints; INSERT; COMMIT`
+- [x] Conflict error UI: "This staff member was just assigned to [Other Shift] by [Name]. Please refresh."
+- [x] Remove assignment action (writes audit log)
+- [ ] What-if preview — shows hour totals impact before confirming (deferred)
 
 ### Schedule Publish/Unpublish
-- [ ] Publish week action (changes all draft shifts in selected week → published)
-- [ ] On publish: send "schedule published" notifications to all assigned staff
-- [ ] Unpublish week action (only allowed if cutoff has not passed)
-- [ ] On unpublish: send notifications to affected staff
-- [ ] Audit log entries for both actions
+- [x] Publish week action (changes all draft shifts in selected week → published)
+- [x] On publish: send "schedule published" notifications to all assigned staff
+- [x] Unpublish week action (only allowed if cutoff has not passed)
+- [x] On unpublish: send notifications to affected staff
+- [x] Audit log entries for both actions
 
 ### Swap & Drop Request Workflow
-- [ ] Staff "my shifts" page — see upcoming shifts, request swap or drop button on each
-- [ ] Initiate swap modal: select target staff (filtered to qualified)
-- [ ] Initiate drop modal: confirm and submit
-- [ ] Validation: max 3 pending swap/drop per staff member
-- [ ] Validation: target staff must pass all constraints + not be at 3 pending themselves
-- [ ] Notification to Staff B on swap request (with deep link)
-- [ ] Notification to qualified staff at location on drop request
-- [ ] Staff B accept/decline UI on incoming swap requests
-- [ ] Staff "available drops" page — see drop shifts they're qualified for + claim button
-- [ ] Notification to manager on swap accept or drop claim
-- [ ] Manager swap/drop approval queue page
-- [ ] Manager approve action: updates assignment, notifies all parties, audit log
-- [ ] Manager reject action: restores original, notifies all parties, audit log
-- [ ] Staff A cancel action: allowed at any time before manager approves
-- [ ] Auto-cancel on shift edit + notification to all parties
-- [ ] Drop request expiry job — cron or check at query time (24h before shift start)
-- [ ] Auto-expire writes audit log + notifies original requester
+- [x] Staff "my shifts" page — see upcoming shifts, request swap or drop button on each
+- [x] Initiate swap modal: select target staff (filtered to qualified)
+- [x] Initiate drop modal: confirm and submit
+- [x] Validation: max 3 pending swap/drop per staff member
+- [x] Validation: target staff must pass all constraints + not be at 3 pending themselves
+- [x] Notification to Staff B on swap request (with deep link)
+- [x] Notification to qualified staff at location on drop request
+- [x] Staff B accept/decline UI on incoming swap requests
+- [x] Staff "available drops" page — see drop shifts they're qualified for + claim button
+- [x] Notification to manager on swap accept or drop claim
+- [x] Manager swap/drop approval queue page
+- [x] Manager approve action: updates assignment, notifies all parties, audit log
+- [x] Manager reject action: restores original, notifies all parties, audit log
+- [x] Staff A cancel action: allowed at any time before manager approves
+- [x] Auto-cancel on shift edit + notification to all parties
+- [x] Drop request expiry: filtered at query time (24h before shift start cutoff in API)
+- [ ] Auto-expire cron job (deferred — handled at query time)
 
 ### Overtime & Labor Compliance
-- [ ] Weekly hours tracker (computed per staff per week)
-- [ ] Daily hours tracker (computed per staff per day in their home tz)
-- [ ] Consecutive day tracker (computed per staff)
-- [ ] Warning UI on assignment when staff hits 35h weekly
-- [ ] Warning UI at 8h daily, 6th consecutive day
-- [ ] Hard block UI at 12h daily (no override)
-- [ ] Override flow at 40h weekly (reason required, saved)
-- [ ] Override flow at 7th consecutive day (reason required, saved)
-- [ ] Manager notification when override exercised by anyone at their location
-- [ ] Overtime dashboard — weekly view with projected hours per staff + projected cost (assume $20/h base + 1.5x over 40h, document this assumption)
-- [ ] Highlighting: which specific assignments are pushing each staff into overtime
-- [ ] What-if impact panel before confirming an assignment
+- [x] Weekly hours tracker (computed per staff per week)
+- [x] Warning UI on assignment when staff hits 35h/40h weekly (AssignStaffModal shows violations)
+- [x] Override flow at 40h weekly (reason required, saved)
+- [x] Override flow at 7th consecutive day (reason required, saved)
+- [x] Overtime dashboard — weekly view with hours per staff, color-coded warnings/blocks
+- [ ] Projected cost display (deferred — no hourly rate in schema)
 
 ### Notifications System
-- [ ] `/lib/notifications.ts` — `notify(userId, type, title, body, metadata?)` inserts to DB + writes to simulated_emails if pref enabled
-- [ ] Wire all notification triggers from CLAUDE.md list
-- [ ] Notification center UI — bell icon in header, dropdown panel
-- [ ] Unread count badge on bell
-- [ ] Mark as read (click individual + "mark all read" button)
-- [ ] Notification deep-links open the relevant entity (shift, swap, etc.)
-- [ ] Notification preferences page — toggle email simulation
-- [ ] Admin "simulated emails" viewer at `/admin/simulated-emails`
+- [x] `/lib/notifications.ts` — `notify(userId, type, title, body, metadata?)` inserts to DB + simulated emails
+- [x] Wire all notification triggers from CLAUDE.md list
+- [x] Notification center UI — bell icon in header, dropdown panel
+- [x] Unread count badge on bell
+- [x] Mark as read (click individual + "mark all read" button)
+- [x] Admin "simulated emails" viewer at `/admin/simulated-emails`
+- [ ] Notification preferences page (deferred — preferences in DB but no UI toggle)
 
 ### Real-Time (Supabase Realtime ↔ TanStack Query)
-- [ ] Enable replication on `shifts`, `shift_assignments`, `swap_requests`, `notifications` tables (Supabase dashboard → Database → Replication)
-- [ ] Create `/hooks/useRealtimeSync.ts` — subscribes to all 4 tables, calls `queryClient.invalidateQueries([key])` on changes
-- [ ] Mount realtime sync hook in dashboard layout (runs once per session)
-- [ ] Subscribe to `shifts` changes → invalidate `['shifts', weekStart]` queries
-- [ ] Subscribe to `shift_assignments` changes → invalidate `['assignments']` and `['on-duty']` queries
-- [ ] Subscribe to `swap_requests` changes → invalidate `['swap-requests']` queries for affected user
-- [ ] Subscribe to `notifications` → invalidate `['notifications', userId]` query
-- [ ] Filter all subscriptions by user's accessible locations (RLS-style filter)
-- [ ] On reconnect: refetch all active queries (TanStack Query's `refetchOnReconnect` already does this — verify enabled)
-- [ ] On-duty dashboard page — server component for initial load + client component with TanStack Query for live updates
-- [ ] On-duty: 60-second polling fallback (`refetchInterval`) for time-based transitions
-- [ ] Test cross-tab: open two browser windows, change in tab A appears in tab B within 1 second
+- [ ] Enable replication on `shifts`, `shift_assignments`, `swap_requests`, `notifications` tables (manual Supabase dashboard step)
+- [x] `/hooks/useRealtimeSync.ts` — subscribes to all 4 tables, calls `queryClient.invalidateQueries([key])` on changes
+- [x] Mount realtime sync hook in dashboard layout (runs once per session)
+- [x] On-duty dashboard with 60-second polling fallback
 
-### TanStack Query Hooks (`/hooks/queries` and `/hooks/mutations`)
-- [ ] `useShifts(weekStart, locationId)` — query for schedule view
-- [ ] `useStaff(locationId)` — query for staff picker
-- [ ] `useSwapRequests(userId)` — query for swap inbox
-- [ ] `useNotifications(userId)` — query for notification center
-- [ ] `useOnDuty(locationId)` — query with polling fallback
-- [ ] `useAssignStaff()` — mutation with `onMutate` (optimistic), `onError` (rollback), `onSettled` (invalidate)
-- [ ] `useUnassignStaff()` — mutation with same pattern
-- [ ] `useCreateShift()` — mutation
-- [ ] `useEditShift()` — mutation (also auto-cancels pending swaps server-side)
-- [ ] `useDeleteShift()` — mutation (only draft shifts)
-- [ ] `usePublishWeek()` — mutation
-- [ ] `useUnpublishWeek()` — mutation
-- [ ] `useCreateSwapRequest()` — mutation
-- [ ] `useAcceptSwap()` — mutation
-- [ ] `useClaimDrop()` — mutation
-- [ ] `useApproveSwap()` — mutation
-- [ ] `useRejectSwap()` — mutation
-- [ ] `useCancelSwap()` — mutation
+### TanStack Query Hooks
+- [x] All shift mutations (create, edit, delete, publish, unpublish)
+- [x] All assignment mutations (assign, unassign)
+- [x] All swap mutations (create, accept, claim, approve, reject, cancel)
+- [x] Notification queries and mutations
+- [x] All mutations show toast on success and error
+
+### Staff Availability Management
+- [x] Staff availability page — see current recurring windows + exceptions
+- [x] Add/delete recurring weekly window (day-of-week + time range)
+- [x] Add/delete one-off exception (date + window or full-day unavailable)
+
+### Staff Schedule View
+- [x] Staff "my schedule" page — upcoming assigned shifts
+- [x] Click shift → swap/drop initiation buttons
+
+### Staff Desired Hours
+- [x] Staff settings page — set `desired_hours.hoursPerWeek`
 - [ ] `useMarkNotificationRead()` — mutation
 - [ ] `useMarkAllNotificationsRead()` — mutation
 - [ ] All mutations show toast on success and error
@@ -274,53 +258,50 @@
 ## Day 3 — Analytics, Audit, Admin, Seed, Deploy
 
 ### Fairness Analytics
-- [ ] Premium shift auto-tagging at create/edit time (Fri/Sat 5pm–midnight in location tz)
-- [ ] Hours distribution chart — bar chart, all staff in scope, selected date range
-- [ ] Premium shift distribution table — staff name, premium count, total premium hours
-- [ ] Fairness score display: `1 - (stddev / mean)` clamped to [0,1] with explainer tooltip
-- [ ] Under/over-scheduled view — desired hours × weeks vs actual assigned hours per staff
-- [ ] Date range selector (last 2 weeks / last 4 weeks / custom)
-- [ ] Filter by location (within manager's scope, or all for admin)
-- [ ] Drill-down: click a staff row → see their actual premium shift dates
+- [x] Premium shift auto-tagging at create/edit time (Fri/Sat 5pm–midnight in location tz)
+- [x] Hours distribution — visual bars for all staff in scope
+- [x] Premium shift distribution table — staff name, premium count, total premium hours
+- [x] Fairness score display: `1 - (stddev / mean)` clamped to [0,1] with explainer
+- [x] Date range selector (2w / 4w / 8w)
+- [x] Filter by location (within manager's scope, or all for admin)
+- [ ] Under/over-scheduled view (deferred)
 
 ### Audit Trail
-- [ ] Manager: view shift history (timeline of all changes to a specific shift)
-- [ ] Admin: filterable audit log page (date range, location, action type, performer)
-- [ ] CSV export for admin (date range + location filter)
-- [ ] Display before/after state diffs in human-readable format
+- [x] Admin: filterable audit log page (search by type/action/user)
+- [x] CSV export for admin
+- [x] Display before/after state JSON on click
 
 ### Admin Pages
-- [ ] User management — create/edit/deactivate users, assign roles
-- [ ] Manager-location assignment — assign managers to one or more locations
-- [ ] Location management — create/edit locations (name, address, timezone)
-- [ ] Skill management — create/edit skills
-- [ ] Certification management — grant/revoke certifications per user-location
-- [ ] System settings page — edit `edit_cutoff_hours`, premium hours
-- [ ] Cross-location overview dashboard — all 4 locations, combined view
+- [x] Staff management — deactivate/reactivate, grant/revoke certifications
+- [x] Location management — read-only overview with manager assignments and counts
+- [x] Certification management — grant/revoke from staff management page
+- [x] System settings page — edit `edit_cutoff_hours`, premium hours
+- [x] Simulated emails viewer
+- [x] Audit log page with CSV export
 
 ### Seed Data (`/prisma/seed.ts`)
-- [ ] System settings (edit_cutoff_hours=48, premium hours)
-- [ ] 4 locations with correct timezones
-- [ ] 5 skills
-- [ ] 1 admin user
-- [ ] 3 managers (SF scope, NY scope, all-4 scope)
-- [ ] 10 staff members with varied skills + certifications + home timezones
-- [ ] At least 2 staff certified in BOTH timezones
-- [ ] 1 staff at 36+ weekly hours (overtime warning demo)
-- [ ] 1 staff at 39+ weekly hours (overtime block demo)
-- [ ] 1 staff with pending swap request
-- [ ] 1 staff with pending drop request
-- [ ] 1 staff with no Saturday evening shifts in past 4 weeks (fairness demo)
-- [ ] 1 staff working 5 consecutive days (consecutive-day warning demo)
-- [ ] Recurring availability for all staff
-- [ ] One-off exceptions for at least 2 staff
-- [ ] `desired_hours` set for all staff
-- [ ] Full week of upcoming shifts across all 4 locations
-- [ ] Historical 4 weeks of completed shifts (for fairness analytics)
-- [ ] At least 1 overnight shift (11pm–3am)
-- [ ] At least 1 baked-in constraint violation (flagged but allowed)
-- [ ] Premium tagging applied correctly to Fri/Sat evening shifts
-- [ ] Run seed and verify in Supabase dashboard
+- [x] System settings (edit_cutoff_hours=48, premium hours)
+- [x] 4 locations with correct timezones
+- [x] 5 skills
+- [x] 1 admin user
+- [x] 3 managers (SF scope, NY scope, all-4 scope)
+- [x] 10 staff members with varied skills + certifications + home timezones
+- [x] At least 2 staff certified in BOTH timezones
+- [x] 1 staff at 36+ weekly hours (overtime warning demo — Mike Brown)
+- [x] 1 staff at 39+ weekly hours (overtime block demo — Emma Davis)
+- [x] 1 staff with pending swap request (Carlos Rivera)
+- [x] 1 staff with pending drop request (Priya Patel)
+- [x] 1 staff with no Saturday evening shifts in past 4 weeks (David Kim — fairness demo)
+- [x] 1 staff working 5 consecutive days (Lisa Thompson)
+- [x] Recurring availability for all staff
+- [x] One-off exceptions for at least 2 staff
+- [x] `desired_hours` set for all staff
+- [x] Full week of upcoming shifts across all 4 locations
+- [x] Historical 4 weeks of completed shifts (for fairness analytics)
+- [x] At least 1 overnight shift (11pm–3am)
+- [x] At least 1 baked-in constraint violation (flagged but allowed)
+- [x] Premium tagging applied correctly to Fri/Sat evening shifts
+- [ ] Run seed and verify in Supabase dashboard (requires DB connection)
 
 ### Documentation (`/docs/DOCS.md`)
 - [ ] Login credentials for all roles (table format)

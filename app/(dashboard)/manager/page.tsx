@@ -10,10 +10,7 @@ interface PageProps {
 function getWeekStart(weekParam?: string): Date {
   if (weekParam) {
     const d = new Date(weekParam);
-    if (!isNaN(d.getTime())) {
-      d.setUTCHours(0, 0, 0, 0);
-      return d;
-    }
+    if (!isNaN(d.getTime())) { d.setUTCHours(0, 0, 0, 0); return d; }
   }
   const now = new Date();
   const day = now.getUTCDay();
@@ -33,15 +30,14 @@ export default async function ManagerSchedulePage({ searchParams }: PageProps) {
   const weekEnd = new Date(weekStart);
   weekEnd.setUTCDate(weekStart.getUTCDate() + 7);
 
-  // Locations this user can see
-  const locations = await prisma.location.findMany({
-    where: scope.role === "admin" ? { isActive: true } : {
-      id: { in: scope.locationIds },
-      isActive: true,
-    },
-    orderBy: { name: "asc" },
-    select: { id: true, name: true, timezone: true },
-  });
+  const [locations, skills] = await Promise.all([
+    prisma.location.findMany({
+      where: scope.role === "admin" ? { isActive: true } : { id: { in: scope.locationIds }, isActive: true },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, timezone: true },
+    }),
+    prisma.skill.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+  ]);
 
   const selectedIds = params.locationId
     ? (Array.isArray(params.locationId) ? params.locationId : [params.locationId])
@@ -52,32 +48,22 @@ export default async function ManagerSchedulePage({ searchParams }: PageProps) {
     : scope.role === "admin" ? {} : { locationId: { in: scope.locationIds } };
 
   const shifts = await prisma.shift.findMany({
-    where: {
-      ...locationFilter,
-      startUtc: { gte: weekStart, lt: weekEnd },
-    },
+    where: { ...locationFilter, startUtc: { gte: weekStart, lt: weekEnd } },
     include: {
       location: true,
       requiredSkill: true,
-      assignments: {
-        where: { status: "active" },
-        include: { user: { select: { id: true, name: true } } },
-      },
+      assignments: { where: { status: "active" }, include: { user: { select: { id: true, name: true } } } },
     },
     orderBy: { startUtc: "asc" },
   });
 
-  // Serialize dates for client
   const serializedShifts = shifts.map((s) => ({
     ...s,
     startUtc: s.startUtc.toISOString(),
     endUtc: s.endUtc.toISOString(),
     createdAt: s.createdAt.toISOString(),
     updatedAt: s.updatedAt.toISOString(),
-    assignments: s.assignments.map((a) => ({
-      ...a,
-      assignedAt: a.assignedAt.toISOString(),
-    })),
+    assignments: s.assignments.map((a) => ({ ...a, assignedAt: a.assignedAt.toISOString() })),
   }));
 
   return (
@@ -88,12 +74,14 @@ export default async function ManagerSchedulePage({ searchParams }: PageProps) {
           {scope.role === "admin" ? "All locations" : locations.map((l) => l.name).join(" · ")}
         </p>
       </div>
-
       <ScheduleShell
         weekStart={weekStart}
+        weekStartISO={weekStart.toISOString()}
         locationIds={selectedIds}
         locations={locations}
+        skills={skills}
         initialShifts={serializedShifts as never}
+        canManage={true}
       />
     </div>
   );
