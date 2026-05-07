@@ -1,9 +1,12 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { playNotificationChime } from "@/lib/chime";
 import { formatDistanceToNow } from "date-fns";
 
 interface Notification {
@@ -18,6 +21,8 @@ interface Notification {
 
 export function NotificationBell({ userId }: { userId: string }) {
   const queryClient = useQueryClient();
+  const seenIds = useRef<Set<string>>(new Set());
+  const initialized = useRef(false);
 
   const { data: notifications = [] } = useQuery<Notification[]>({
     queryKey: ["notifications", userId],
@@ -28,6 +33,24 @@ export function NotificationBell({ userId }: { userId: string }) {
     },
     refetchInterval: 30000,
   });
+
+  useEffect(() => {
+    if (!initialized.current) {
+      // Seed seen IDs on first load — don't toast for pre-existing notifications
+      notifications.forEach((n) => seenIds.current.add(n.id));
+      initialized.current = true;
+      return;
+    }
+
+    // On every subsequent refetch (polling or realtime), toast any new notification
+    notifications.forEach((n) => {
+      if (!seenIds.current.has(n.id)) {
+        seenIds.current.add(n.id);
+        toast(n.title, { description: n.body, duration: 5000 });
+        playNotificationChime();
+      }
+    });
+  }, [notifications]);
 
   const unread = notifications.filter((n) => !n.read).length;
 
