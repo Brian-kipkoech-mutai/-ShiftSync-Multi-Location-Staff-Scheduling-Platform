@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -38,9 +38,9 @@ export function FairnessClient({ initialStaff, initialFairnessScore, initialMean
   const [weeks, setWeeks] = useState(initialWeeks);
   const [locationId, setLocationId] = useState<string>("");
 
-  const queryKey = ["fairness", weeks, locationId];
-  const { data } = useQuery<{ staff: StaffFairness[]; fairnessScore: number | null; mean: number }>({
-    queryKey,
+  const isInitialCombo = weeks === initialWeeks && locationId === "";
+  const { data, isFetching } = useQuery<{ staff: StaffFairness[]; fairnessScore: number | null; mean: number }>({
+    queryKey: ["fairness", weeks, locationId],
     queryFn: async () => {
       const params = new URLSearchParams({ weeks: String(weeks) });
       if (locationId) params.set("locationId", locationId);
@@ -48,15 +48,19 @@ export function FairnessClient({ initialStaff, initialFairnessScore, initialMean
       if (!res.ok) throw new Error("Failed to load analytics");
       return res.json();
     },
-    initialData: { staff: initialStaff, fairnessScore: initialFairnessScore, mean: initialMean },
-    staleTime: 60_000,
+    initialData: isInitialCombo
+      ? { staff: initialStaff, fairnessScore: initialFairnessScore, mean: initialMean }
+      : undefined,
+    initialDataUpdatedAt: 0,
+    placeholderData: keepPreviousData,
+    staleTime: 30_000,
   });
 
   const staff = data?.staff ?? initialStaff;
   const fairnessScore = data?.fairnessScore ?? initialFairnessScore;
   const mean = data?.mean ?? initialMean;
-  const maxPremium = Math.max(...staff.map((s) => s.premiumShifts), 1);
-  const maxHours = Math.max(...staff.map((s) => s.totalHours), 1);
+  const maxPremium = Math.max(...(staff.length ? staff.map((s) => s.premiumShifts) : [1]), 1);
+  const maxHours = Math.max(...(staff.length ? staff.map((s) => s.totalHours) : [1]), 1);
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -84,6 +88,9 @@ export function FairnessClient({ initialStaff, initialFairnessScore, initialMean
           <option value="">All locations</option>
           {locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
         </select>
+        {isFetching && (
+          <span className="text-xs text-muted-foreground animate-pulse">Updating…</span>
+        )}
       </div>
 
       {/* Fairness score card */}
@@ -106,10 +113,25 @@ export function FairnessClient({ initialStaff, initialFairnessScore, initialMean
       </div>
 
       {/* Staff table */}
-      {staff.length === 0 ? (
+      {staff.length === 0 && !isFetching ? (
         <p className="text-sm text-muted-foreground">No published shifts in this period.</p>
-      ) : (
+      ) : staff.length === 0 && isFetching ? (
         <div className="space-y-2">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="bg-card border border-border rounded-md px-3 py-3 space-y-2 animate-pulse">
+              <div className="grid grid-cols-[1fr_auto_auto_auto] gap-3 items-center">
+                <div className="h-3.5 bg-muted rounded w-32" />
+                <div className="h-3.5 bg-muted rounded w-10" />
+                <div className="h-3.5 bg-muted rounded w-6" />
+                <div className="h-3.5 bg-muted rounded w-12" />
+              </div>
+              <div className="h-1 bg-muted rounded-full" />
+              <div className="h-1 bg-muted rounded-full" />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className={cn("space-y-2 transition-opacity duration-150", isFetching && "opacity-50 pointer-events-none")}>
           <div className="grid grid-cols-[1fr_auto_auto_auto] gap-3 px-3 py-1.5 text-[10px] text-muted-foreground uppercase tracking-wide">
             <span>Staff Member</span>
             <span className="text-right">Total hrs</span>
