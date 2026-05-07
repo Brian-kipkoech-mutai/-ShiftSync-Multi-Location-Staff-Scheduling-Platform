@@ -90,8 +90,8 @@ export async function POST(request: NextRequest) {
   }
 
   if (type === "swap" && targetUserId) {
-    // Validate target staff's constraints
-    const constraints = await runAllConstraints(targetUserId, assignment.shiftId);
+    // Validate target staff's constraints — skip alternatives, just need pass/fail
+    const constraints = await runAllConstraints(targetUserId, assignment.shiftId, undefined, { skipAlternatives: true });
     const blocks = constraints.violations.filter((v) => v.severity === "block");
     if (blocks.length > 0) {
       return NextResponse.json({ error: `Target staff cannot take this shift: ${blocks[0].message}`, violations: blocks }, { status: 409 });

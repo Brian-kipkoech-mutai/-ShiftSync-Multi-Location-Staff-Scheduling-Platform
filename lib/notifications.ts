@@ -7,13 +7,11 @@ export async function notify(
   body: string,
   metadata?: Record<string, unknown>
 ) {
-  const [notification, pref] = await Promise.all([
-    prisma.notification.create({
-      data: { userId, type, title, body, metadata: metadata as object | undefined },
-    }),
-    prisma.notificationPreference.findUnique({ where: { userId } }),
-  ]);
+  const notification = await prisma.notification.create({
+    data: { userId, type, title, body, metadata: metadata as object | undefined },
+  });
 
+  const pref = await prisma.notificationPreference.findUnique({ where: { userId } });
   const emailEnabled = pref?.emailSimulation ?? true;
 
   if (emailEnabled) {
@@ -44,7 +42,7 @@ export async function notifyMany(
   body: string,
   metadata?: Record<string, unknown>
 ) {
-  await Promise.all(
-    userIds.map((userId) => notify(userId, type, title, body, metadata))
-  );
+  for (const userId of userIds) {
+    await notify(userId, type, title, body, metadata);
+  }
 }

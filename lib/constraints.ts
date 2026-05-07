@@ -417,7 +417,8 @@ export async function checkHeadcountAvailable(
 export async function runAllConstraints(
   userId: string,
   shiftId: string,
-  excludeShiftIdForRest?: string
+  excludeShiftIdForRest?: string,
+  options?: { skipAlternatives?: boolean }
 ): Promise<ConstraintResult> {
   const shift = await prisma.shift.findUniqueOrThrow({
     where: { id: shiftId },
@@ -432,22 +433,21 @@ export async function runAllConstraints(
   const shiftHours =
     differenceInMinutes(shift.endUtc, shift.startUtc) / 60;
 
-  const checks = await Promise.all([
-    checkHeadcountAvailable(shiftId),
-    checkDoubleBooking(userId, shift.startUtc, shift.endUtc, excludeShiftIdForRest),
-    checkRestPeriod(userId, shift.startUtc, shift.endUtc, excludeShiftIdForRest),
-    checkSkillMatch(userId, shift.requiredSkillId),
-    checkLocationCertification(userId, shift.locationId),
-    checkAvailability(userId, shift.locationId, shift.startUtc, shift.endUtc),
-    checkDailyHours(userId, shift.startUtc, shift.location.timezone, shiftHours, excludeShiftIdForRest),
-    checkWeeklyHours(userId, shift.startUtc, user.homeTimezone, shiftHours, excludeShiftIdForRest),
-    checkConsecutiveDays(userId, shift.startUtc, user.homeTimezone, excludeShiftIdForRest),
-  ]);
+  const checks: (ConstraintViolation | null)[] = [];
+  checks.push(await checkHeadcountAvailable(shiftId));
+  checks.push(await checkDoubleBooking(userId, shift.startUtc, shift.endUtc, excludeShiftIdForRest));
+  checks.push(await checkRestPeriod(userId, shift.startUtc, shift.endUtc, excludeShiftIdForRest));
+  checks.push(await checkSkillMatch(userId, shift.requiredSkillId));
+  checks.push(await checkLocationCertification(userId, shift.locationId));
+  checks.push(await checkAvailability(userId, shift.locationId, shift.startUtc, shift.endUtc));
+  checks.push(await checkDailyHours(userId, shift.startUtc, shift.location.timezone, shiftHours, excludeShiftIdForRest));
+  checks.push(await checkWeeklyHours(userId, shift.startUtc, user.homeTimezone, shiftHours, excludeShiftIdForRest));
+  checks.push(await checkConsecutiveDays(userId, shift.startUtc, user.homeTimezone, excludeShiftIdForRest));
 
   const violations = checks.filter(Boolean) as ConstraintViolation[];
 
   const hasBlocks = violations.some((v) => v.severity === "block");
-  const alternatives = hasBlocks
+  const alternatives = (hasBlocks && !options?.skipAlternatives)
     ? await suggestAlternatives(shiftId, userId)
     : undefined;
 

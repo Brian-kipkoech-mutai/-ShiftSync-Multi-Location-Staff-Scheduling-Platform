@@ -7,16 +7,14 @@ import { logAudit } from "@/lib/audit";
 export async function GET() {
   const user = await getSessionUser();
 
-  const [windows, exceptions] = await Promise.all([
-    prisma.availabilityWindow.findMany({
-      where: { userId: user.id },
-      orderBy: [{ dayOfWeek: "asc" }, { startTime: "asc" }],
-    }),
-    prisma.availabilityException.findMany({
-      where: { userId: user.id },
-      orderBy: { date: "asc" },
-    }),
-  ]);
+  const windows = await prisma.availabilityWindow.findMany({
+    where: { userId: user.id },
+    orderBy: [{ dayOfWeek: "asc" }, { startTime: "asc" }],
+  });
+  const exceptions = await prisma.availabilityException.findMany({
+    where: { userId: user.id },
+    orderBy: { date: "asc" },
+  });
 
   return NextResponse.json({ windows, exceptions });
 }

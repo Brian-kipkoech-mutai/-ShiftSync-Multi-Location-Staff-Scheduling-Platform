@@ -231,27 +231,7 @@
 
 ### Staff Desired Hours
 - [x] Staff settings page — set `desired_hours.hoursPerWeek`
-- [ ] `useMarkNotificationRead()` — mutation
-- [ ] `useMarkAllNotificationsRead()` — mutation
-- [ ] All mutations show toast on success and error
-
-### Staff Availability Management
-- [ ] Staff availability page — see current recurring windows + exceptions
-- [ ] Add/edit/delete recurring weekly window (day-of-week + time range)
-- [ ] Add/edit/delete one-off exception (date + window or full-day unavailable)
-- [ ] Notification to managers at staff's locations on availability change
-- [ ] Manager view: any staff member's availability calendar (read-only)
-- [ ] Display in user's home timezone, with conversion to location timezone shown when relevant
-
-### Staff Schedule View
-- [ ] Staff "my schedule" page — calendar showing only their assigned shifts
-- [ ] Times displayed in each shift's location timezone, with home-tz hint
-- [ ] Click shift → detail modal with location, skill, swap/drop buttons
-- [ ] Filter by past/upcoming
-
-### Staff Desired Hours
-- [ ] Staff settings page — set `desired_hours.hoursPerWeek`
-- [ ] Visible in fairness analytics for managers (Day 3)
+- [x] Visible in fairness analytics for managers (Day 3)
 
 ---
 
