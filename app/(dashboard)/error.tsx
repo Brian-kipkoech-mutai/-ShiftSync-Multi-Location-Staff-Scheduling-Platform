@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { AlertTriangleIcon, RefreshCwIcon, WifiOffIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -19,11 +20,18 @@ function isDbConnectionError(err: Error) {
 }
 
 export default function DashboardError({ error, reset }: Props) {
+  const router = useRouter();
+
   useEffect(() => {
     console.error("[DashboardError]", error);
   }, [error]);
 
   const isDb = isDbConnectionError(error);
+
+  function handleRetry() {
+    router.refresh(); // invalidate Next.js router cache → forces fresh server render
+    reset();          // re-render the error boundary segment
+  }
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center">
@@ -45,7 +53,7 @@ export default function DashboardError({ error, reset }: Props) {
         )}
       </div>
 
-      <Button size="sm" onClick={reset} className="gap-2">
+      <Button size="sm" onClick={handleRetry} className="gap-2">
         <RefreshCwIcon className="size-4" />
         Try again
       </Button>
