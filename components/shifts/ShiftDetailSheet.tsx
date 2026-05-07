@@ -41,10 +41,25 @@ export function ShiftDetailSheet({ shift, onClose, locations, skills, canManage 
   return (
     <>
       <Sheet open={!!shift} onOpenChange={(v) => !v && onClose()}>
-        <SheetContent
-          className="w-80 sm:w-96 flex flex-col"
-          onInteractOutside={(e) => { if (editOpen || assignOpen) e.preventDefault(); }}
-        >
+        {shift && (
+          <>
+            <ShiftFormModal
+              open={editOpen}
+              onClose={() => setEditOpen(false)}
+              shift={shift}
+              locations={locations}
+              skills={skills}
+            />
+            {assignOpen && (
+              <AssignStaffModal
+                open={assignOpen}
+                onClose={() => setAssignOpen(false)}
+                shift={shift}
+              />
+            )}
+          </>
+        )}
+        <SheetContent className="w-80 sm:w-96 flex flex-col">
           <SheetHeader>
             <SheetTitle className="text-base">Shift Details</SheetTitle>
           </SheetHeader>
@@ -125,22 +140,6 @@ export function ShiftDetailSheet({ shift, onClose, locations, skills, canManage 
         </SheetContent>
       </Sheet>
 
-      {shift && (
-        <ShiftFormModal
-          open={editOpen}
-          onClose={() => setEditOpen(false)}
-          shift={shift}
-          locations={locations}
-          skills={skills}
-        />
-      )}
-      {shift && assignOpen && (
-        <AssignStaffModal
-          open={assignOpen}
-          onClose={() => setAssignOpen(false)}
-          shift={shift}
-        />
-      )}
     </>
   );
 }
