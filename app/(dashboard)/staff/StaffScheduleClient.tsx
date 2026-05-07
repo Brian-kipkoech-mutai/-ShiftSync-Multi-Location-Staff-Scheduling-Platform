@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Loader2 } from "lucide-react";
 import { useCreateSwap } from "@/hooks/mutations/useSwapMutations";
 
 interface Assignment {
@@ -43,7 +44,7 @@ export function StaffScheduleClient({ initialAssignments, userId }: { initialAss
   const [targetUserId, setTargetUserId] = useState("");
   const createSwap = useCreateSwap();
 
-  const { data: coworkers = [] } = useQuery<StaffMember[]>({
+  const { data: coworkers = [], isLoading: coworkersLoading } = useQuery<StaffMember[]>({
     queryKey: ["coworkers", swapModal?.assignment.shift.location.id],
     queryFn: async () => {
       if (!swapModal) return [];
@@ -121,10 +122,28 @@ export function StaffScheduleClient({ initialAssignments, userId }: { initialAss
               {swapModal.type === "swap" && (
                 <div className="space-y-1.5">
                   <p className="text-xs text-muted-foreground">Select staff to swap with:</p>
-                  <Select onValueChange={(v) => setTargetUserId(v ?? "")} value={targetUserId}>
-                    <SelectTrigger className="h-9"><SelectValue placeholder="Select staff member…" /></SelectTrigger>
+                  <Select onValueChange={(v) => setTargetUserId(typeof v === "string" ? v : "")} value={targetUserId}>
+                    <SelectTrigger className="h-9 w-full">
+                      <SelectValue placeholder="Select staff member…">
+                        {(value: string | null) =>
+                          value ? (coworkers.find((c) => c.id === value)?.name ?? value) : null
+                        }
+                      </SelectValue>
+                    </SelectTrigger>
                     <SelectContent>
-                      {coworkers.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                      {coworkersLoading ? (
+                        <div className="flex items-center justify-center py-4">
+                          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                        </div>
+                      ) : coworkers.length === 0 ? (
+                        <div className="py-3 px-2 text-xs text-muted-foreground text-center">
+                          No eligible staff available
+                        </div>
+                      ) : (
+                        coworkers.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                 </div>

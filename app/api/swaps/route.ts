@@ -63,10 +63,14 @@ export async function GET() {
 
 // POST /api/swaps — initiate a swap or drop request
 export async function POST(request: NextRequest) {
+  try {
   const user = await getSessionUser();
   if (user.role !== "staff") return NextResponse.json({ error: "Only staff can initiate swap/drop requests" }, { status: 403 });
 
-  const { assignmentId, type, targetUserId } = await request.json();
+  const body = await request.json();
+  const { assignmentId, type } = body;
+  const targetUserId: string | undefined = typeof body.targetUserId === "string" ? body.targetUserId : undefined;
+
   if (!assignmentId || !type) return NextResponse.json({ error: "assignmentId and type required" }, { status: 400 });
   if (type === "swap" && !targetUserId) return NextResponse.json({ error: "targetUserId required for swap" }, { status: 400 });
 
@@ -134,4 +138,9 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json(swap, { status: 201 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Internal server error";
+    console.error("[POST /api/swaps]", err);
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }
