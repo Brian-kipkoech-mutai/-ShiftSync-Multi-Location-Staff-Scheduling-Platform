@@ -301,5 +301,18 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   await notify(userId, "shift_assigned", "You've been assigned a shift", `You've been assigned to a shift at ${a.shift.location.name}.`, { shiftId: id });
   await logAudit({ entityType: "assignment", entityId: a.id, action: "create", after: a, performedBy: user.id });
 
+  // Notify OTHER managers at this location if assignment triggers an overtime warning
+  const { violations } = await runAllConstraints(userId, id, undefined, { skipAlternatives: true });
+  const warnings = violations.filter((v: ConstraintViolation) => v.severity === "warning");
+  if (warnings.length > 0) {
+    const otherManagers = await prisma.managerLocationAssignment.findMany({
+      where: { locationId: shift.locationId, managerId: { not: user.id } },
+    });
+    const warningMsg = warnings.map((v: ConstraintViolation) => v.message).join("; ");
+    for (const m of otherManagers) {
+      await notify(m.managerId, "overtime_warning", `Overtime warning — ${a.user.name}`, warningMsg, { shiftId: id });
+    }
+  }
+
   return NextResponse.json(a, { status: 201 });
 }

@@ -105,6 +105,9 @@ export function useRealtimeSync(userId: string) {
               case "overtime_override":
                 qc.invalidateQueries({ queryKey: ["shifts"] });
                 break;
+              case "availability_changed":
+                qc.invalidateQueries({ queryKey: ["staff"] });
+                break;
             }
           })
           .subscribe((s) => console.log("[RT] rt-notifications:", s)),

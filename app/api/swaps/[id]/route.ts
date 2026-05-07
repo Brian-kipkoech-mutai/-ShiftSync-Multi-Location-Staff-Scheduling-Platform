@@ -62,6 +62,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     for (const m of managers) {
       await notify(m.managerId, "drop_awaiting_approval", "Drop claim awaiting approval", `${user.name} claimed the dropped ${shiftName}. Approval needed.`, { swapId: id });
     }
+    await notify(swap.requesterId, "drop_request_created", "Your dropped shift was claimed", `${user.name} has claimed your dropped ${shiftName}. Awaiting manager approval.`, { swapId: id });
     return NextResponse.json({ ok: true });
   }
 
@@ -123,6 +124,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     await logAudit({ entityType: "swap_request", entityId: id, action: "cancel", before: swap, performedBy: user.id });
     if (swap.targetUserId) await notify(swap.targetUserId, "swap_cancelled", "Swap cancelled", `${swap.requester.name} cancelled the swap request for the ${shiftName}.`, { swapId: id });
     if (swap.claimedBy) await notify(swap.claimedBy, "drop_cancelled", "Drop cancelled", `The drop request for the ${shiftName} was cancelled.`, { swapId: id });
+    // Notify managers so they know the pending request is gone
+    const cancelManagers = await prisma.managerLocationAssignment.findMany({
+      where: { locationId: swap.shiftAssignment.shift.locationId },
+    });
+    const cancelLabel = swap.type === "drop" ? "drop" : "swap";
+    for (const m of cancelManagers) {
+      await notify(m.managerId, "swap_cancelled", `${cancelLabel === "drop" ? "Drop" : "Swap"} request cancelled`, `${swap.requester.name} cancelled their ${cancelLabel} request for the ${shiftName}.`, { swapId: id });
+    }
     return NextResponse.json({ ok: true });
   }
 

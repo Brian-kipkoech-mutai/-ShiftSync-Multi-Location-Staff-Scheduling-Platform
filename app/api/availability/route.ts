@@ -2,6 +2,24 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { logAudit } from "@/lib/audit";
+import { notify } from "@/lib/notifications";
+
+async function notifyManagersOfAvailabilityChange(staffId: string, staffName: string) {
+  const certs = await prisma.locationCertification.findMany({
+    where: { userId: staffId, revokedAt: null },
+    select: { locationId: true },
+  });
+  const locationIds = certs.map((c) => c.locationId);
+  if (locationIds.length === 0) return;
+  const managers = await prisma.managerLocationAssignment.findMany({
+    where: { locationId: { in: locationIds } },
+    select: { managerId: true },
+  });
+  const uniqueManagerIds = [...new Set(managers.map((m) => m.managerId))];
+  for (const managerId of uniqueManagerIds) {
+    await notify(managerId, "availability_changed", "Staff availability updated", `${staffName} has updated their availability.`, { staffId });
+  }
+}
 
 // GET /api/availability — current user's availability windows + exceptions
 export async function GET() {
@@ -33,6 +51,7 @@ export async function POST(request: NextRequest) {
       data: { userId: user.id, dayOfWeek, startTime, endTime },
     });
     await logAudit({ entityType: "availability", entityId: window.id, action: "create", after: window, performedBy: user.id });
+    await notifyManagersOfAvailabilityChange(user.id, user.name);
     return NextResponse.json(window, { status: 201 });
   }
 
@@ -43,6 +62,7 @@ export async function POST(request: NextRequest) {
       data: { userId: user.id, date, startTime: startTime ?? null, endTime: endTime ?? null, isUnavailable: !!isUnavailable },
     });
     await logAudit({ entityType: "availability", entityId: exception.id, action: "create", after: exception, performedBy: user.id });
+    await notifyManagersOfAvailabilityChange(user.id, user.name);
     return NextResponse.json(exception, { status: 201 });
   }
 
