@@ -36,9 +36,9 @@ export function useEditShift() {
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ["shifts"] });
       toast.success("Shift updated");
-      if (data.disqualifiedAssignees?.length) {
-        const names = (data.disqualifiedAssignees as { name: string }[]).map((a) => a.name).join(", ");
-        toast.warning(`Skill mismatch — reassignment needed: ${names}`, { duration: 8000 });
+      if (data.unassignedStaff?.length) {
+        const names = (data.unassignedStaff as { name: string }[]).map((a) => a.name).join(", ");
+        toast.warning(`Unassigned due to skill change: ${names}`, { duration: 8000 });
       }
     },
     onError: (e: Error) => toast.error(e.message),
