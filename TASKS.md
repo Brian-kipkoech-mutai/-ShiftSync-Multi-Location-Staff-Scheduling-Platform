@@ -10,7 +10,7 @@
 ## Day 0 — Pre-Build Setup (do this BEFORE opening Claude Code)
 
 ### Supabase project
-- [ ] Create Supabase project at supabase.com (region near you, free tier)
+- [x] Create Supabase project at supabase.com (region near you, free tier)
 - [ ] Copy: Project URL, anon key, service_role key (Settings → API)
 - [ ] Copy: pooled connection string (Settings → Database → Connection string → Transaction mode, port 6543) — append `?pgbouncer=true&connection_limit=1`
 - [ ] Copy: direct connection string (Settings → Database → Connection string → Session mode, port 5432)

@@ -79,3 +79,35 @@ Each location has exactly one canonical timezone. No attempt to split across tim
 | Priya Patel | priya.patel@coastaleats.com | Staff1234! | Host — SF/LA certified; no Saturday evenings last 4 weeks (fairness demo) |
 | David Kim | david.kim@coastaleats.com | Staff1234! | Bartender + Supervisor — SF certified; 5 consecutive days worked |
 | Lisa Thompson | lisa.thompson@coastaleats.com | Staff1234! | Server — NY certified; has pending drop request |
+
+---
+
+## Shift Edit — Time-Change Auto-Unassign
+
+### What was built
+When a manager edits a shift's date or time, the system now re-evaluates every currently assigned staff member against time-sensitive hard constraints. Staff who would violate a constraint under the new times are automatically unassigned and notified. This closes a gap where editing a shift's start time could silently create an invalid state (e.g., staff member with 9am availability being left on a shift now starting at 8am).
+
+### Which constraints are checked
+Only time-sensitive hard-block rules are re-checked (skill match is handled separately via the skill-change path):
+- `no_double_booking` — shift now overlaps another of the staff member's shifts
+- `rest_period` — the 10-hour rest rule is violated with adjacent shifts
+- `availability` — staff's declared availability window does not cover the new shift time
+- `daily_12h_cap` — the staff member would exceed 12 hours in the calendar day after the time change
+
+### Behavior
+1. After the skill-mismatch unassign block, any staff not already removed are checked via `runAllConstraints(..., { skipAlternatives: true })`.
+2. If a block-severity violation is found on a time rule, the assignment is set to `status: "removed"`.
+3. All location managers receive a `skill_mismatch_warning` notification listing affected staff and the reason.
+4. Each unassigned staff member receives a `shift_unassigned` notification with the specific constraint reason.
+5. A `time-change-unassign` audit log entry records who was removed and why.
+6. The API response includes all unassigned staff (both skill-mismatch and time-change paths) in `unassignedStaff`.
+
+### Assumption made
+The check uses `runAllConstraints` with the new shift times already persisted in the database (the `prisma.shift.update` happens before the constraint re-check). This means the function sees the updated times when evaluating — no special "what-if" mode needed.
+
+### Known limitation
+If a shift has many assignees, the re-check runs constraint queries sequentially per staff member. For typical shift headcounts (1–6 staff) this is negligible; it would not scale to bulk-assigned large events without batching.
+
+### Evaluation scenarios enabled
+- Scenario 2 (Overtime Trap): time edits that push a staff member into daily cap violation are now caught automatically.
+- Scenario 1 (Sunday Night Chaos): if an emergency edit moves a shift, staff with conflicting schedules or availability are removed rather than silently left in an invalid state.

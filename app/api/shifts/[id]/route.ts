@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { parseShiftTimes, isPremiumShift } from "@/lib/timezone";
 import { logAudit } from "@/lib/audit";
 import { notify } from "@/lib/notifications";
+import { runAllConstraints } from "@/lib/constraints";
 import { addHours } from "date-fns";
 
 async function getEditCutoffHours(): Promise<number> {
@@ -127,6 +128,56 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       }
 
       await logAudit({ entityType: "shift", entityId: id, action: "skill-change-unassign", before: { assignees: unassignedStaff }, after: { status: "removed", reason: `Required skill changed to ${newSkill.name}` }, performedBy: user.id });
+    }
+  }
+
+  // If shift times changed, re-check time-sensitive constraints for remaining assigned staff
+  const timeChanged = !!(date || startTime || endTime);
+  const alreadyUnassignedIds = new Set(unassignedStaff.map((s) => s.id));
+
+  if (timeChanged && shift.assignments.length > 0) {
+    const remaining = shift.assignments.filter((a) => !alreadyUnassignedIds.has(a.userId));
+    const timeViolators: { id: string; name: string; reason: string }[] = [];
+
+    for (const a of remaining) {
+      const { violations } = await runAllConstraints(a.userId, id, undefined, { skipAlternatives: true });
+      const timeRules = new Set(["no_double_booking", "rest_period", "availability", "daily_12h_cap"]);
+      const blocks = violations.filter((v) => v.severity === "block" && timeRules.has(v.rule));
+      if (blocks.length > 0) {
+        timeViolators.push({ id: a.userId, name: a.user.name, reason: blocks[0].message });
+      }
+    }
+
+    if (timeViolators.length > 0) {
+      await prisma.shiftAssignment.updateMany({
+        where: { shiftId: id, userId: { in: timeViolators.map((v) => v.id) }, status: "active" },
+        data: { status: "removed" },
+      });
+
+      const names = timeViolators.map((v) => v.name).join(", ");
+      const managerMsg = `Shift time was changed at ${shift.location.name}. The following staff were automatically unassigned because they no longer meet time constraints: ${names}.`;
+
+      await notify(user.id, "skill_mismatch_warning", "Staff unassigned — time change conflict", managerMsg, { shiftId: id });
+      const locationManagers = await prisma.managerLocationAssignment.findMany({
+        where: { locationId: shift.locationId, managerId: { not: user.id } },
+        select: { managerId: true },
+      });
+      for (const m of locationManagers) {
+        await notify(m.managerId, "skill_mismatch_warning", "Staff unassigned — time change conflict", managerMsg, { shiftId: id });
+      }
+
+      for (const v of timeViolators) {
+        await notify(v.id, "shift_unassigned", "Removed from a shift", `You have been removed from a shift at ${shift.location.name} because the time was changed. Reason: ${v.reason}`, { shiftId: id });
+      }
+
+      await logAudit({
+        entityType: "shift", entityId: id, action: "time-change-unassign",
+        before: { assignees: timeViolators.map((v) => ({ id: v.id, name: v.name })) },
+        after: { status: "removed", reason: "Shift time change caused constraint violation" },
+        performedBy: user.id,
+      });
+
+      unassignedStaff = [...unassignedStaff, ...timeViolators.map((v) => ({ id: v.id, name: v.name }))];
     }
   }
 
