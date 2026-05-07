@@ -72,15 +72,22 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const newUserId = swap.type === "swap" ? swap.targetUserId : swap.claimedBy;
     if (!newUserId) return NextResponse.json({ error: "No target user" }, { status: 409 });
 
-    // Check if new assignee already has an active slot on this shift (would violate unique constraint)
-    const existingAssignment = await prisma.shiftAssignment.findFirst({
-      where: { shiftId: swap.shiftAssignment.shiftId, userId: newUserId, status: "active" },
+    // Check for ANY existing assignment for the new user on this shift (unique constraint covers all statuses)
+    const existingAssignment = await prisma.shiftAssignment.findUnique({
+      where: { shiftId_userId: { shiftId: swap.shiftAssignment.shiftId, userId: newUserId } },
     });
 
-    if (existingAssignment) {
-      // New assignee is already on the shift — just retire the original slot and close the request
+    if (existingAssignment?.status === "active") {
+      // Already on the shift — retire original slot and close request
       await prisma.shiftAssignment.update({ where: { id: swap.shiftAssignmentId }, data: { status: "dropped" } });
       await prisma.swapRequest.update({ where: { id }, data: { status: "approved", resolvedAt: new Date() } });
+    } else if (existingAssignment) {
+      // Stale row exists (dropped/swapped_out) — re-activate it instead of creating
+      await prisma.$transaction([
+        prisma.shiftAssignment.update({ where: { id: swap.shiftAssignmentId }, data: { status: swap.type === "swap" ? "swapped_out" : "dropped" } }),
+        prisma.shiftAssignment.update({ where: { id: existingAssignment.id }, data: { status: "active", assignedBy: user.id, assignedAt: new Date() } }),
+        prisma.swapRequest.update({ where: { id }, data: { status: "approved", resolvedAt: new Date() } }),
+      ]);
     } else {
       await prisma.$transaction([
         prisma.shiftAssignment.update({ where: { id: swap.shiftAssignmentId }, data: { status: swap.type === "swap" ? "swapped_out" : "dropped" } }),
