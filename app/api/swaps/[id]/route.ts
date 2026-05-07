@@ -5,6 +5,7 @@ import { logAudit } from "@/lib/audit";
 import { notify } from "@/lib/notifications";
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
   const { id } = await params;
   const user = await getSessionUser();
   const { action, reason } = await request.json();
@@ -47,6 +48,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (swap.type !== "drop") return NextResponse.json({ error: "Not a drop request" }, { status: 409 });
     if (swap.status !== "pending") return NextResponse.json({ error: "Request is not claimable" }, { status: 409 });
 
+    const alreadyOn = await prisma.shiftAssignment.findFirst({
+      where: { shiftId: swap.shiftAssignment.shiftId, userId: user.id, status: "active" },
+    });
+    if (alreadyOn) return NextResponse.json({ error: "You are already assigned to this shift." }, { status: 409 });
+
     await prisma.swapRequest.update({ where: { id }, data: { status: "claimed", claimedBy: user.id } });
     await logAudit({ entityType: "swap_request", entityId: id, action: "claim", before: swap, performedBy: user.id });
 
@@ -66,11 +72,22 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const newUserId = swap.type === "swap" ? swap.targetUserId : swap.claimedBy;
     if (!newUserId) return NextResponse.json({ error: "No target user" }, { status: 409 });
 
-    await prisma.$transaction([
-      prisma.shiftAssignment.update({ where: { id: swap.shiftAssignmentId }, data: { status: swap.type === "swap" ? "swapped_out" : "dropped" } }),
-      prisma.shiftAssignment.create({ data: { shiftId: swap.shiftAssignment.shiftId, userId: newUserId, assignedBy: user.id } }),
-      prisma.swapRequest.update({ where: { id }, data: { status: "approved", resolvedAt: new Date() } }),
-    ]);
+    // Check if new assignee already has an active slot on this shift (would violate unique constraint)
+    const existingAssignment = await prisma.shiftAssignment.findFirst({
+      where: { shiftId: swap.shiftAssignment.shiftId, userId: newUserId, status: "active" },
+    });
+
+    if (existingAssignment) {
+      // New assignee is already on the shift — just retire the original slot and close the request
+      await prisma.shiftAssignment.update({ where: { id: swap.shiftAssignmentId }, data: { status: "dropped" } });
+      await prisma.swapRequest.update({ where: { id }, data: { status: "approved", resolvedAt: new Date() } });
+    } else {
+      await prisma.$transaction([
+        prisma.shiftAssignment.update({ where: { id: swap.shiftAssignmentId }, data: { status: swap.type === "swap" ? "swapped_out" : "dropped" } }),
+        prisma.shiftAssignment.create({ data: { shiftId: swap.shiftAssignment.shiftId, userId: newUserId, assignedBy: user.id } }),
+        prisma.swapRequest.update({ where: { id }, data: { status: "approved", resolvedAt: new Date() } }),
+      ]);
+    }
 
     await logAudit({ entityType: "swap_request", entityId: id, action: "approve", before: swap, after: { newUserId }, performedBy: user.id });
     await notify(swap.requesterId, "swap_approved", "Swap approved", `Your ${swap.type} request for the ${shiftName} was approved.`, { swapId: id });
@@ -103,4 +120,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   }
 
   return NextResponse.json({ error: "Unknown action" }, { status: 400 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Internal server error";
+    console.error("[PATCH /api/swaps/[id]]", err);
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }

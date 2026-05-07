@@ -32,6 +32,8 @@ export async function GET() {
           startUtc: { gt: cutoff },
           locationId: { in: locationIds },
           requiredSkillId: { in: skillIds },
+          // exclude shifts the claimer is already assigned to
+          assignments: { none: { userId: user.id, status: "active" } },
         },
       },
     },
