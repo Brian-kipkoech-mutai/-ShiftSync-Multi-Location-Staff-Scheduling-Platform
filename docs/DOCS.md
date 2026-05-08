@@ -4,6 +4,28 @@
 
 ---
 
+## Evaluation Scenarios — Pass/Fail Verification
+
+### 1. The Sunday Night Chaos ✅
+Manager opens the 7pm shift → clicks **Assign Staff** → modal shows all certified staff pre-sorted: green (available, no conflicts) at the top, blocked staff at the bottom with the exact reason. One click assigns. Staff gets a real-time in-app notification instantly. The edit cutoff (48h) only blocks changing shift details — assignments can still be made right up to shift time.
+
+### 2. The Overtime Trap ✅
+The Assign Staff modal shows projected hours for every staff card — current hours → hours after this shift, colour-coded green/amber/red. Mike Brown (36h) shows an amber warning card. Emma Davis (39h) shows a red blocked card. If a manager somehow builds a schedule that gets someone to 40h, the constraint engine hard-blocks the final assignment. Override requires a documented reason. The Overtime page shows the full weekly cost projection ($20/h base + 1.5× OT).
+
+### 3. The Timezone Tangle ✅
+James Wilson is seeded with PT home timezone, certified at The Pier (PT) and Harbor View (ET). His "9am–5pm" availability is stored as wall-clock PT. When assigning him to an ET shift, `checkAvailability()` converts his PT window to UTC and compares against the ET shift's UTC times. A shift at Harbor View ending at 10pm ET (= 7pm PT) fails — outside his 5pm PT cutoff. A shift ending at 8pm ET (= 5pm PT) passes exactly.
+
+### 4. The Simultaneous Assignment ✅
+Both managers see the Assign Staff modal. First click succeeds inside a `prisma.$transaction()`. The second manager's request hits the same transaction block, re-checks headcount and double-booking inside the lock, and returns: *"This staff member was just assigned to [Shift] — please refresh."* Both browsers update via Supabase Realtime within ~1 second.
+
+### 5. The Fairness Complaint ✅
+Manager goes to **Analytics** → sets date range to 4 weeks. The premium shift distribution table shows every staff member's premium shift count. Priya Patel is seeded with 0 Saturday evening shifts over the last 4 weeks. The fairness score drops visibly when one person has significantly fewer premium shifts than peers. The under/over-scheduled bar chart also shows if she's below her desired hours target.
+
+### 6. The Regret Swap ✅
+Carlos Rivera has a pending swap seeded. He goes to **My Swaps**, clicks **Cancel**. The API checks `status !== "approved"` (still `pending`/`accepted`) — cancellation allowed. His original assignment is preserved, the target staff member and the manager both get an in-app notification. An audit log entry records the cancellation with `action: "cancel"`, `performedBy: Carlos`.
+
+---
+
 ## Shift Edit — Constraint Preview & Confirmed Unassignment
 
 ### What was built
