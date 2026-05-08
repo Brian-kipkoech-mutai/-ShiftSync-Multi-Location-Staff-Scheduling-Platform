@@ -129,6 +129,57 @@ export function AnalyticsSkeleton() {
   );
 }
 
+export function OnDutySkeleton({ cols = 4 }: { cols?: number }) {
+  const colCounts = [2, 3, 1, 2]; // staff cards per location column
+  return (
+    <div className="space-y-4 animate-pulse">
+      {/* Title */}
+      <div className="space-y-1.5">
+        <Skeleton className="h-6 w-32" />
+        <Skeleton className="h-4 w-64" />
+      </div>
+
+      {/* Live summary strip */}
+      <div className="flex items-center gap-2">
+        <Skeleton className="h-3 w-8" />
+        <Skeleton className="h-3 w-px" />
+        <Skeleton className="h-3 w-44" />
+      </div>
+
+      {/* Location columns */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
+        {Array.from({ length: cols }, (_, i) => (
+          <div key={i} className="border border-border rounded-md overflow-hidden">
+            {/* Column header */}
+            <div className="px-3 py-2.5 border-b border-border flex items-center justify-between gap-2">
+              <Skeleton className="h-3.5 w-24" />
+              <Skeleton className="h-3 w-14" />
+            </div>
+
+            {/* Staff cards */}
+            {Array.from({ length: colCounts[i % colCounts.length] }, (_, j) => (
+              <div key={j} className="px-3 pt-3 pb-2 border-b border-border last:border-0 space-y-2">
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-3 w-32" />
+                <div className="flex gap-1">
+                  <Skeleton className="h-4 w-16 rounded-sm" />
+                </div>
+                <div className="space-y-1">
+                  <Skeleton className="h-1 w-full rounded-full" />
+                  <div className="flex justify-between">
+                    <Skeleton className="h-2.5 w-16" />
+                    <Skeleton className="h-2.5 w-14" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function ScheduleSkeleton() {
   return (
     <div className="space-y-3 animate-pulse">
