@@ -4,6 +4,21 @@
 
 ---
 
+## DST Handling for Recurring Availability Windows
+
+Recurring availability is stored as raw wall-clock strings — e.g. `(dayOfWeek=1, startTime="09:00", endTime="17:00")`. When the system checks whether a shift falls inside a staff member's availability, `getAvailabilityInUtc()` in `lib/timezone.ts` converts those strings to UTC for comparison.
+
+DST creates two edge cases on transition days:
+
+- **Spring forward** (e.g. 2:00am → 3:00am): The gap hour does not exist. `date-fns-tz` advances non-existent times by the gap length (+1 hour).
+- **Fall back** (e.g. 2:00am → 1:00am): The 1:00am–2:00am hour occurs twice. `date-fns-tz` resolves the ambiguity to the second occurrence (post-DST, standard time).
+
+Both cases are handled by passing the ISO wall-clock string directly to `fromZonedTime(string, timezone)`. This lets `date-fns-tz` own the full conversion, including DST edge cases, without the server's local timezone ever being involved.
+
+**Why this matters:** constructing `new Date("2023-11-05T01:30:00")` without a timezone suffix is parsed as server local time. On a UTC server the hour value is correct by accident. On any non-UTC server (or a developer's local machine) the hour is off by the server's UTC offset before `fromZonedTime` even runs. Passing the string directly bypasses this entirely — the conversion is deterministic regardless of where the server runs.
+
+---
+
 ## On-Duty Dashboard — Realtime + Polling Hybrid
 
 The on-duty dashboard shows who is currently working at each location. It uses two update mechanisms in combination.
