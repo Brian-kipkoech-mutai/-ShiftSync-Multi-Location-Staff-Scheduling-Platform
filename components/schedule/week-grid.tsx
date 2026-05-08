@@ -10,11 +10,12 @@ interface WeekGridProps {
   weekStart: Date;
   shifts: ShiftWithRelations[];
   onShiftClick?: (shift: ShiftWithRelations) => void;
+  isLoading?: boolean;
 }
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-export function WeekGrid({ weekStart, shifts, onShiftClick }: WeekGridProps) {
+export function WeekGrid({ weekStart, shifts, onShiftClick, isLoading = false }: WeekGridProps) {
   const days = useMemo(
     () => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)),
     [weekStart]
@@ -71,7 +72,9 @@ export function WeekGrid({ weekStart, shifts, onShiftClick }: WeekGridProps) {
             </div>
 
             <div className="flex-1 p-1 space-y-1 overflow-y-auto">
-              {dayShifts.length === 0 ? (
+              {isLoading ? (
+                <ShiftCardSkeleton count={i % 3 === 0 ? 2 : i % 3 === 1 ? 1 : 2} />
+              ) : dayShifts.length === 0 ? (
                 <p className="text-[11px] text-muted-foreground/40 text-center mt-3">—</p>
               ) : (
                 dayShifts.map((shift) => (
@@ -88,5 +91,22 @@ export function WeekGrid({ weekStart, shifts, onShiftClick }: WeekGridProps) {
       })}
     </div>
     </div>
+  );
+}
+
+function ShiftCardSkeleton({ count }: { count: number }) {
+  return (
+    <>
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="rounded-md border border-border bg-card px-2 py-1.5 animate-pulse space-y-1.5">
+          <div className="flex justify-between gap-1">
+            <div className="h-2.5 bg-muted rounded w-3/4" />
+            <div className="h-2.5 bg-muted rounded w-6" />
+          </div>
+          <div className="h-2 bg-muted rounded w-1/2" />
+          <div className="h-4 bg-muted rounded w-14" />
+        </div>
+      ))}
+    </>
   );
 }

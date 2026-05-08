@@ -19,7 +19,7 @@ export interface ShiftWithRelations {
   }>;
 }
 
-export function useShifts(weekStart: Date, locationIds: string[] = []) {
+export function useShifts(weekStart: Date, locationIds: string[] = [], initialData?: ShiftWithRelations[]) {
   const weekParam = weekStart.toISOString().split("T")[0];
   const locationParams = locationIds.map((id) => `locationId=${id}`).join("&");
   const url = `/api/shifts?week=${weekParam}${locationParams ? "&" + locationParams : ""}`;
@@ -32,5 +32,7 @@ export function useShifts(weekStart: Date, locationIds: string[] = []) {
       return res.json();
     },
     staleTime: 30 * 1000,
+    initialData,
+    initialDataUpdatedAt: initialData ? 0 : undefined,
   });
 }

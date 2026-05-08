@@ -1,30 +1,20 @@
 "use client";
 
 import { addDays, format, isSameDay, startOfWeek } from "date-fns";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
 interface WeekNavProps {
   weekStart: Date;
+  onNavigate: (date: Date) => void;
 }
 
-export function WeekNav({ weekStart }: WeekNavProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  function navigate(newWeekStart: Date) {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("week", newWeekStart.toISOString().split("T")[0]);
-    router.push(`${pathname}?${params.toString()}`);
-  }
-
+export function WeekNav({ weekStart, onNavigate }: WeekNavProps) {
   function goToPrev() {
-    navigate(addDays(weekStart, -7));
+    onNavigate(addDays(weekStart, -7));
   }
 
   function goToNext() {
-    navigate(addDays(weekStart, 7));
+    onNavigate(addDays(weekStart, 7));
   }
 
   function goToToday() {
@@ -34,7 +24,7 @@ export function WeekNav({ weekStart }: WeekNavProps) {
     const monday = new Date(today);
     monday.setUTCDate(today.getUTCDate() + diff);
     monday.setUTCHours(0, 0, 0, 0);
-    navigate(monday);
+    onNavigate(monday);
   }
 
   const weekEnd = addDays(weekStart, 6);

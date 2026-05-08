@@ -1,6 +1,7 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { useShifts, type ShiftWithRelations } from "@/hooks/queries/useShifts";
 import { WeekGrid } from "./week-grid";
 import { WeekNav } from "./week-nav";
@@ -33,7 +34,22 @@ export function ScheduleShell({
   canManage,
   weekStartISO,
 }: ScheduleShellProps) {
-  const { data: shifts = initialShifts, isFetching } = useShifts(weekStart, locationIds);
+  const router = useRouter();
+  const [isNavigating, startTransition] = useTransition();
+
+  function navigateToWeek(date: Date) {
+    const params = new URLSearchParams();
+    params.set("week", date.toISOString().split("T")[0]);
+    locationIds.forEach((id) => params.append("locationId", id));
+    startTransition(() => router.push(`?${params.toString()}`));
+  }
+
+  const isInitialWeek = weekStartISO === weekStart.toISOString().split("T")[0];
+  const { data: shifts = [], isFetching } = useShifts(
+    weekStart,
+    locationIds,
+    isInitialWeek ? initialShifts : undefined,
+  );
   const [selectedShiftId, setSelectedShiftId] = useState<string | null>(null);
   const selectedShift = selectedShiftId ? (shifts.find((s) => s.id === selectedShiftId) ?? null) : null;
   const [createOpen, setCreateOpen] = useState(false);
@@ -46,9 +62,7 @@ export function ScheduleShell({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2 sm:gap-3">
-        <Suspense fallback={null}>
-          <WeekNav weekStart={weekStart} />
-        </Suspense>
+        <WeekNav weekStart={weekStart} onNavigate={navigateToWeek} />
         <div className="flex items-center gap-2 flex-wrap">
           <Suspense fallback={null}>
             <LocationSelector locations={locations} selectedIds={locationIds} />
@@ -87,11 +101,12 @@ export function ScheduleShell({
         </div>
       )}
 
-      <div className={isFetching ? "opacity-60 transition-opacity" : ""}>
+      <div className={isFetching && !isNavigating ? "opacity-60 transition-opacity" : ""}>
         <WeekGrid
           weekStart={weekStart}
           shifts={shifts}
           onShiftClick={(s) => setSelectedShiftId(s.id)}
+          isLoading={isNavigating}
         />
       </div>
 
