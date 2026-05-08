@@ -244,7 +244,7 @@
 - [x] Fairness score display: `1 - (stddev / mean)` clamped to [0,1] with explainer
 - [x] Date range selector (2w / 4w / 8w)
 - [x] Filter by location (within manager's scope, or all for admin)
-- [ ] Under/over-scheduled view (deferred)
+- [x] Under/over-scheduled view — actual vs target hours on analytics bar chart (teal = actual, amber = target) + desired h/wk column in staff table
 
 ### Audit Trail
 - [x] Admin: filterable audit log page (search by type/action/user)
