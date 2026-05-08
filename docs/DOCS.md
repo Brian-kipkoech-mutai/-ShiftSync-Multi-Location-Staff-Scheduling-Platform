@@ -39,6 +39,19 @@ If swap was approved and manager edits the shift, Staff B keeps the shift but is
 ### 5. Location spanning a timezone boundary
 Each location has exactly one canonical timezone. No attempt to split across timezone boundaries. Documented as known limitation.
 
+### 6. "Suggest alternatives" — list-based assignment instead of try-and-fail
+The spec states the system should "suggest alternatives when possible (e.g., Sarah is unavailable, but John and Maria have the required skill and availability)." This language assumes a try-and-fail UX: the manager picks someone, the assignment fails, and the system then surfaces alternatives.
+
+**Decision:** We implemented a pre-evaluated list model instead. When a manager opens the Assign Staff modal, the system runs all nine constraint checks against every certified staff member in one batched query and returns the full list sorted by assignability: available staff first (green Assign button), override-required staff second (amber Override button), fully blocked staff last (red Blocked badge with the specific violation reason inline — e.g., "Only 6h rest between shifts — minimum is 10h").
+
+**Why this is better UX:**
+- The manager sees who is available *before* making a choice, not after a failed attempt. There is no wasted click.
+- The violation reason is shown inline for every blocked person, so the manager understands the constraint without triggering it.
+- The available staff at the top of the list *are* the alternatives — they are pre-filtered by skill match, location certification, availability, rest period, double-booking, daily cap, and weekly hours in a single screen.
+- For the "Sunday Night Chaos" scenario (staff calls out 1h before a shift), the manager opens the modal and immediately sees 1–3 green Assign buttons at the top — the fastest possible path to coverage.
+
+The `suggestAlternatives()` function in `lib/constraints.ts` is fully implemented and wired into `runAllConstraints()` for programmatic use (e.g., auto-unassign flows that need to recommend replacements). In the interactive assign flow the list modal makes it redundant.
+
 ---
 
 ## Known Limitations
