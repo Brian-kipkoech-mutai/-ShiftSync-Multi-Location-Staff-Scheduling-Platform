@@ -59,7 +59,7 @@ function PremiumDonutChart({ staff, fairnessScore }: { staff: StaffFairness[]; f
   return (
     <div>
       <p className="text-xs font-medium text-muted-foreground mb-3">Premium Shift Distribution</p>
-      <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-52">
+      <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-64">
         <PieChart>
           <ChartTooltip content={<ChartTooltipContent hideLabel nameKey="name" />} />
           <Pie data={data} dataKey="value" nameKey="name" innerRadius={56} outerRadius={80} paddingAngle={2}>
@@ -119,7 +119,7 @@ function HoursBarChart({ staff, weeks }: { staff: StaffFairness[]; weeks: number
   return (
     <div>
       <p className="text-xs font-medium text-muted-foreground mb-3">Hours — Actual vs Target</p>
-      <ChartContainer config={chartConfig} className="max-h-52 w-full">
+      <ChartContainer config={chartConfig} className="max-h-64 w-full">
         <BarChart data={data} barCategoryGap="30%" barGap={2}>
           <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.5} />
           <XAxis dataKey="name" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
@@ -191,8 +191,61 @@ export function FairnessClient({ initialStaff, initialFairnessScore, initialMean
   const maxPremium = Math.max(...(staff.length ? staff.map((s) => s.premiumShifts) : [1]), 1);
   const maxHours = Math.max(...(staff.length ? staff.map((s) => s.totalHours) : [1]), 1);
 
+  const staffTable = isFetching ? (
+    <div className="space-y-2">
+      <div className="grid grid-cols-[1fr_auto_auto_auto] gap-3 px-3 py-1.5 text-[10px] text-muted-foreground uppercase tracking-wide">
+        <span>Staff Member</span>
+        <span className="text-right">Total hrs</span>
+        <span className="text-right">Premium</span>
+        <span className="text-right">Target</span>
+      </div>
+      {[...Array(staff.length || 5)].map((_, i) => (
+        <StaffRowSkeleton key={i} />
+      ))}
+    </div>
+  ) : staff.length === 0 ? (
+    <p className="text-sm text-muted-foreground">No published shifts in this period.</p>
+  ) : (
+    <div className="space-y-2">
+      <div className="grid grid-cols-[1fr_auto_auto_auto] gap-3 px-3 py-1.5 text-[10px] text-muted-foreground uppercase tracking-wide">
+        <span>Staff Member</span>
+        <span className="text-right">Total hrs</span>
+        <span className="text-right">Premium</span>
+        <span className="text-right">Target</span>
+      </div>
+      {staff.map((s) => (
+        <div key={s.userId} className="bg-card border border-border rounded-md px-3 py-3 space-y-2">
+          <div className="grid grid-cols-[1fr_auto_auto_auto] gap-3 items-center">
+            <p className="text-sm font-medium">{s.name}</p>
+            <span className="text-sm font-mono text-right">{s.totalHours.toFixed(1)}h</span>
+            <div className="text-right">
+              {s.premiumShifts > 0 ? (
+                <Badge className="text-[10px] bg-amber-800/60 text-amber-300 border-0">★ {s.premiumShifts}</Badge>
+              ) : (
+                <span className="text-xs text-muted-foreground">0</span>
+              )}
+            </div>
+            <span className="text-xs text-muted-foreground text-right">
+              {s.desiredHoursPerWeek != null ? `${s.desiredHoursPerWeek}h/wk` : "—"}
+            </span>
+          </div>
+          <div className="h-1 bg-muted rounded-full overflow-hidden">
+            <div className="h-full bg-amber-500 rounded-full" style={{ width: `${(s.premiumShifts / maxPremium) * 100}%` }} />
+          </div>
+          <div className="h-1 bg-muted rounded-full overflow-hidden">
+            <div className="h-full bg-teal-500 rounded-full" style={{ width: `${(s.totalHours / maxHours) * 100}%` }} />
+          </div>
+        </div>
+      ))}
+      <div className="flex gap-4 text-xs text-muted-foreground px-1 pt-1">
+        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber-500" /> Premium shifts</span>
+        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-teal-500" /> Total hours</span>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className="space-y-6">
       {/* Controls */}
       <div className="flex items-center gap-3 flex-wrap">
         <div className="flex gap-1.5">
@@ -224,7 +277,7 @@ export function FairnessClient({ initialStaff, initialFairnessScore, initialMean
         </Select>
       </div>
 
-      {/* Fairness score card */}
+      {/* Fairness score card — full width */}
       <div className="bg-card border border-border rounded-md p-4 flex items-center gap-6">
         <div>
           <p className="text-xs text-muted-foreground mb-1">Fairness Score</p>
@@ -251,83 +304,32 @@ export function FairnessClient({ initialStaff, initialFairnessScore, initialMean
         </div>
       </div>
 
-      {/* Charts */}
-      {!isFetching && staff.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="bg-card border border-border rounded-md p-4">
-            <PremiumDonutChart staff={staff} fairnessScore={fairnessScore} />
-          </div>
-          <div className="bg-card border border-border rounded-md p-4">
-            <HoursBarChart staff={staff} weeks={weeks} />
-          </div>
+      {/* lg+: charts left (2 cols) + table right — below lg: stacked */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        {/* Charts column */}
+        <div className="lg:col-span-2 grid grid-cols-1 gap-4">
+          {isFetching ? (
+            <>
+              <div className="bg-card border border-border rounded-md p-4 h-80 animate-pulse" />
+              <div className="bg-card border border-border rounded-md p-4 h-80 animate-pulse" />
+            </>
+          ) : staff.length > 0 ? (
+            <>
+              <div className="bg-card border border-border rounded-md p-4">
+                <PremiumDonutChart staff={staff} fairnessScore={fairnessScore} />
+              </div>
+              <div className="bg-card border border-border rounded-md p-4">
+                <HoursBarChart staff={staff} weeks={weeks} />
+              </div>
+            </>
+          ) : null}
         </div>
-      )}
-      {isFetching && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="bg-card border border-border rounded-md p-4 h-64 animate-pulse" />
-          <div className="bg-card border border-border rounded-md p-4 h-64 animate-pulse" />
-        </div>
-      )}
 
-      {/* Staff table */}
-      {isFetching ? (
-        <div className="space-y-2">
-          <div className="grid grid-cols-[1fr_auto_auto_auto] gap-3 px-3 py-1.5 text-[10px] text-muted-foreground uppercase tracking-wide">
-            <span>Staff Member</span>
-            <span className="text-right">Total hrs</span>
-            <span className="text-right">Premium</span>
-            <span className="text-right">Target</span>
-          </div>
-          {[...Array(staff.length || 5)].map((_, i) => (
-            <StaffRowSkeleton key={i} />
-          ))}
+        {/* Staff table column */}
+        <div className="lg:col-span-1">
+          {staffTable}
         </div>
-      ) : staff.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No published shifts in this period.</p>
-      ) : (
-        <div className="space-y-2">
-          <div className="grid grid-cols-[1fr_auto_auto_auto] gap-3 px-3 py-1.5 text-[10px] text-muted-foreground uppercase tracking-wide">
-            <span>Staff Member</span>
-            <span className="text-right">Total hrs</span>
-            <span className="text-right">Premium</span>
-            <span className="text-right">Target</span>
-          </div>
-          {staff.map((s) => (
-            <div key={s.userId} className="bg-card border border-border rounded-md px-3 py-3 space-y-2">
-              <div className="grid grid-cols-[1fr_auto_auto_auto] gap-3 items-center">
-                <p className="text-sm font-medium">{s.name}</p>
-                <span className="text-sm font-mono text-right">{s.totalHours.toFixed(1)}h</span>
-                <div className="text-right">
-                  {s.premiumShifts > 0 ? (
-                    <Badge className="text-[10px] bg-amber-800/60 text-amber-300 border-0">★ {s.premiumShifts}</Badge>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">0</span>
-                  )}
-                </div>
-                <span className="text-xs text-muted-foreground text-right">
-                  {s.desiredHoursPerWeek != null ? `${s.desiredHoursPerWeek}h/wk` : "—"}
-                </span>
-              </div>
-              <div className="h-1 bg-muted rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-amber-500 rounded-full"
-                  style={{ width: `${(s.premiumShifts / maxPremium) * 100}%` }}
-                />
-              </div>
-              <div className="h-1 bg-muted rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-teal-500 rounded-full"
-                  style={{ width: `${(s.totalHours / maxHours) * 100}%` }}
-                />
-              </div>
-            </div>
-          ))}
-          <div className="flex gap-4 text-xs text-muted-foreground px-1 pt-1">
-            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber-500" /> Premium shifts</span>
-            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-teal-500" /> Total hours</span>
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 }
