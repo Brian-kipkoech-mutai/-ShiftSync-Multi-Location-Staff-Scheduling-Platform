@@ -1,5 +1,5 @@
-import { PageSkeleton } from "@/components/layout/page-skeleton";
+import { SettingsSkeleton } from "@/components/layout/page-skeleton";
 
 export default function Loading() {
-  return <PageSkeleton rows={3} hasHeader={false} />;
+  return <SettingsSkeleton />;
 }

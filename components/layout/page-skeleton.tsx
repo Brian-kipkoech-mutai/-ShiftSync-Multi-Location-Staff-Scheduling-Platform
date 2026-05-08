@@ -129,6 +129,117 @@ export function AnalyticsSkeleton() {
   );
 }
 
+export function OverviewSkeleton() {
+  return (
+    <div className="space-y-6 animate-pulse">
+      {/* Title */}
+      <Skeleton className="h-6 w-56" />
+
+      {/* 3 stat cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {[120, 96, 136].map((w, i) => (
+          <div key={i} className="bg-card border border-border rounded-md p-4 space-y-2">
+            <Skeleton className="h-8 w-10" />
+            <Skeleton className={`h-4 w-${w === 120 ? "28" : w === 96 ? "24" : "32"}`} />
+          </div>
+        ))}
+      </div>
+
+      {/* Welcome line */}
+      <Skeleton className="h-4 w-72" />
+    </div>
+  );
+}
+
+export function LocationsSkeleton() {
+  const cards = [
+    { name: "w-28", mgr1: "w-20", mgr2: "w-24" },
+    { name: "w-32", mgr1: "w-24", mgr2: "w-20" },
+    { name: "w-24", mgr1: "w-28", mgr2: "w-16" },
+    { name: "w-36", mgr1: "w-20", mgr2: "w-24" },
+  ];
+
+  return (
+    <div className="space-y-5 animate-pulse">
+      <Skeleton className="h-6 w-28" />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl">
+        {cards.map((c, i) => (
+          <div key={i} className="border border-border rounded-md p-4 space-y-3">
+            {/* Name + timezone */}
+            <div className="space-y-1.5">
+              <Skeleton className={`h-4 ${c.name}`} />
+              <Skeleton className="h-3 w-40" />
+            </div>
+
+            {/* Stats grid — 2 rows × 2 cols */}
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-3 w-6" />
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="h-3 w-6" />
+            </div>
+
+            {/* Managers */}
+            <div className="space-y-1.5">
+              <Skeleton className="h-2.5 w-14" />
+              <div className="flex gap-1.5">
+                <Skeleton className={`h-5 ${c.mgr1} rounded`} />
+                <Skeleton className={`h-5 ${c.mgr2} rounded`} />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function SettingsSkeleton() {
+  return (
+    <div className="space-y-4 max-w-md animate-pulse">
+      {/* Title + subtitle */}
+      <div className="space-y-1.5">
+        <Skeleton className="h-6 w-36" />
+        <Skeleton className="h-4 w-56" />
+      </div>
+
+      {/* Notification prefs card */}
+      <div className="border border-border rounded-md p-4 space-y-3">
+        <div className="space-y-1.5">
+          <Skeleton className="h-4 w-48" />
+          <Skeleton className="h-3 w-40" />
+        </div>
+        <div className="flex items-center justify-between">
+          <div className="space-y-1.5">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-3 w-48" />
+          </div>
+          <Skeleton className="h-6 w-10 rounded-full" />
+        </div>
+      </div>
+
+      {/* Section label */}
+      <Skeleton className="h-3 w-40 mt-2" />
+
+      {/* 3 setting rows */}
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="border border-border rounded-md p-4 space-y-2.5">
+          <div className="space-y-1.5">
+            <Skeleton className="h-4 w-40 font-mono" />
+            <Skeleton className="h-3 w-full max-w-xs" />
+          </div>
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-9 w-28 rounded-md" />
+            <Skeleton className="h-9 w-16 rounded-md" />
+          </div>
+          <Skeleton className="h-3 w-36" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // Card widths vary per card to feel natural, not mechanical
 const CARD_WIDTHS = [
   { name: "w-28", email: "w-36", tz: "w-20", hrs: "w-16", skill1: "w-14", skill2: "w-16", skill3: "w-12", cert1: "w-20", cert2: "w-24" },
