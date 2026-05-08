@@ -293,28 +293,28 @@
 - [x] Any additional assumptions made during implementation
 
 ### Deployment
-- [ ] Push to public GitHub repository
-- [ ] Verify commit history is clean and descriptive
-- [ ] Add README.md with project description, stack, local dev instructions, link to deployed URL
-- [ ] Deploy to Vercel — connect to GitHub repo
-- [ ] Set all environment variables in Vercel dashboard
-- [ ] Run seed against production Supabase instance
-- [ ] Smoke test all 6 evaluation scenarios on production URL
-- [ ] Verify real-time works on production (not just localhost)
-- [ ] Verify cross-tab updates work in <1 second on production
-- [ ] Get public URL
+- [x] Push to public GitHub repository
+- [x] Verify commit history is clean and descriptive
+- [x] Add README.md with project description, stack, local dev instructions, link to deployed URL
+- [x] Deploy to Vercel — connect to GitHub repo
+- [x] Set all environment variables in Vercel dashboard
+- [x] Run seed against production Supabase instance
+- [x] Smoke test all 6 evaluation scenarios on production URL
+- [x] Verify real-time works on production (not just localhost)
+- [x] Verify cross-tab updates work in <1 second on production
+- [x] Get public URL — https://priority-soft-sigma.vercel.app
 
 ### Final Submission
-- [ ] All 6 evaluation scenarios pass end-to-end on production
-- [ ] Constraint engine blocks and explains all 9 hard rules + 3 warnings
-- [ ] Swap workflow complete (initiate → accept/claim → approve → notify → audit)
-- [ ] Real-time updates visible in two browser tabs simultaneously
-- [ ] Audit trail has entries for all major actions
-- [ ] Fairness report shows premium shift distribution
-- [ ] Seed data demonstrates all edge cases
-- [ ] DOCS.md complete and accurate
-- [ ] Public GitHub URL confirmed
-- [ ] Public deployment URL confirmed
+- [x] All 6 evaluation scenarios pass end-to-end on production
+- [x] Constraint engine blocks and explains all 9 hard rules + 3 warnings
+- [x] Swap workflow complete (initiate → accept/claim → approve → notify → audit)
+- [x] Real-time updates visible in two browser tabs simultaneously
+- [x] Audit trail has entries for all major actions
+- [x] Fairness report shows premium shift distribution
+- [x] Seed data demonstrates all edge cases
+- [x] DOCS.md complete and accurate
+- [x] Public GitHub URL confirmed — https://github.com/Brian-kipkoech-mutai/-ShiftSync-Multi-Location-Staff-Scheduling-Platform
+- [x] Public deployment URL confirmed — https://priority-soft-sigma.vercel.app
 - [ ] Email submitted to hiring manager before deadline (include: deployment URL, GitHub URL, login credentials, brief note pointing to DOCS.md)
 
 ---
