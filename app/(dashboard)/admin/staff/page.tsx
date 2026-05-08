@@ -20,7 +20,7 @@ export default async function AdminStaffPage() {
   ]);
 
   return (
-    <div>
+    <div className="w-full">
       <h1 className="text-lg font-semibold text-foreground mb-5">Staff Management</h1>
       <AdminStaffClient
         users={users.map((u) => ({

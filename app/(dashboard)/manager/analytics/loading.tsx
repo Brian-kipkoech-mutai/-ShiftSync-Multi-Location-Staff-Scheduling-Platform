@@ -1,5 +1,5 @@
-import { PageSkeleton } from "@/components/layout/page-skeleton";
+import { AnalyticsSkeleton } from "@/components/layout/page-skeleton";
 
 export default function Loading() {
-  return <PageSkeleton rows={6} />;
+  return <AnalyticsSkeleton />;
 }
