@@ -4,6 +4,22 @@
 
 ---
 
+## What-If Impact Preview (Assign Staff Modal)
+
+The requirement asks for the ability to see "what-if" impact before confirming an assignment. This is implemented as an **inline projected-hours row** on every staff card inside the Assign Staff modal — no separate confirmation step required.
+
+Each card shows:
+```
+32.5h → 40.5h/wk    3.0h → 11.0h today
+```
+The arrow shows current hours → projected hours after this shift is added. Color coding: **green** (safe), **amber** (entering warning zone: 35–40h/wk or 8–12h/day), **red** (over hard limit: >40h/wk or >12h/day).
+
+This gives the manager the full overtime picture before clicking Assign — without an extra click or modal. Staff who would breach a limit are already showing amber/red and have a violation message below their name; the what-if row makes the same information visible even for staff who are safely assignable, so the manager can compare the cost of each option side by side.
+
+**To see this in the Overtime Trap scenario:** open any shift's Assign Staff modal when staff have existing hours that week. The projected totals update per-staff instantly — no action needed to trigger the preview.
+
+---
+
 ## Session 1 — Foundation (Day 1)
 
 ### What was built
