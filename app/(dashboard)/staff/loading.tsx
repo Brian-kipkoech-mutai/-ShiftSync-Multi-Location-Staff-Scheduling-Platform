@@ -1,5 +1,5 @@
-import { PageSkeleton } from "@/components/layout/page-skeleton";
+import { StaffShiftGridSkeleton } from "@/components/layout/page-skeleton";
 
 export default function Loading() {
-  return <PageSkeleton rows={5} />;
+  return <StaffShiftGridSkeleton cards={6} />;
 }

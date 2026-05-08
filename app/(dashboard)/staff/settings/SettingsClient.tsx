@@ -53,98 +53,97 @@ export function SettingsClient({ name, email, homeTimezone, desiredHoursPerWeek,
       return res.json();
     },
     onMutate: (value) => setEmailSim(value),
-    onError: (err: Error, value) => {
-      setEmailSim(!value);
-      toast.error(err.message);
-    },
+    onError: (err: Error, value) => { setEmailSim(!value); toast.error(err.message); },
   });
 
   return (
-    <div className="space-y-8 max-w-md">
-      {/* Profile info — read-only */}
-      <div className="bg-card border border-border rounded-md p-4 space-y-3">
-        <h2 className="text-sm font-semibold">Profile</h2>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-          <span className="text-muted-foreground">Name</span>
-          <span>{name}</span>
-          <span className="text-muted-foreground">Email</span>
-          <span className="truncate">{email}</span>
-          <span className="text-muted-foreground">Home timezone</span>
-          <span className="text-xs">{homeTimezone}</span>
-        </div>
-      </div>
-
-      {/* Desired hours */}
-      <div className="bg-card border border-border rounded-md p-4 space-y-3">
-        <div>
-          <h2 className="text-sm font-semibold">Desired Hours</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">Used in fairness analytics — does not restrict scheduling.</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Input
-            type="number"
-            min={0}
-            max={80}
-            step={0.5}
-            className="h-9 w-24 font-mono"
-            value={hours}
-            onChange={(e) => setHours(e.target.value)}
-            placeholder="e.g. 32"
-          />
-          <span className="text-sm text-muted-foreground">hours / week</span>
-        </div>
-        <Button
-          size="sm"
-          className="bg-teal-600 hover:bg-teal-700 text-white"
-          disabled={saveMutation.isPending || !hours}
-          onClick={() => saveMutation.mutate(parseFloat(hours))}
-        >
-          {saveMutation.isPending ? "Saving…" : "Save"}
-        </Button>
-      </div>
-
-      {/* Notification preferences */}
-      <div className="bg-card border border-border rounded-md p-4 space-y-3">
-        <div>
-          <h2 className="text-sm font-semibold">Notification Preferences</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">In-app notifications are always on.</p>
-        </div>
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm">Email simulation</p>
-            <p className="text-xs text-muted-foreground">Receive email copies of notifications</p>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+      {/* ── Left col: Profile + Certifications ── */}
+      <div className="space-y-4">
+        {/* Profile */}
+        <div className="border border-border rounded-md p-4 space-y-3">
+          <h2 className="text-sm font-semibold">Profile</h2>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+            <span className="text-muted-foreground">Name</span>
+            <span>{name}</span>
+            <span className="text-muted-foreground">Email</span>
+            <span className="truncate">{email}</span>
+            <span className="text-muted-foreground">Home timezone</span>
+            <span className="text-xs">{homeTimezone}</span>
           </div>
-          <Switch
-            checked={emailSim}
-            disabled={prefMutation.isPending}
-            onCheckedChange={(val) => prefMutation.mutate(val)}
-          />
+        </div>
+
+        {/* Certifications */}
+        <div className="border border-border rounded-md overflow-hidden">
+          <div className="px-4 py-3 border-b border-border bg-card">
+            <h2 className="text-sm font-semibold">Location Certifications</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">Managed by admin — contact your manager to update.</p>
+          </div>
+          <div className="divide-y divide-border">
+            {certifications.length === 0 ? (
+              <p className="px-4 py-4 text-sm text-muted-foreground">No certifications on file.</p>
+            ) : certifications.map((c) => (
+              <div key={c.locationName + c.grantedAt} className="px-4 py-3 flex items-center justify-between gap-3 bg-card">
+                <div>
+                  <p className="text-sm font-medium">{c.locationName}</p>
+                  <p className="text-xs text-muted-foreground">{c.timezone}</p>
+                </div>
+                <Badge
+                  variant="outline"
+                  className={c.revokedAt ? "text-[10px] text-red-400 border-red-800/40" : "text-[10px] text-teal-400 border-teal-800/40"}
+                >
+                  {c.revokedAt ? "Revoked" : "Active"}
+                </Badge>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Certifications */}
-      <div className="bg-card border border-border rounded-md p-4 space-y-3">
-        <div>
-          <h2 className="text-sm font-semibold">Location Certifications</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">Managed by admin — contact your manager to add or remove certifications.</p>
+      {/* ── Right col: Desired Hours + Notifications ── */}
+      <div className="space-y-4">
+        {/* Desired hours */}
+        <div className="border border-border rounded-md p-4 space-y-3">
+          <div>
+            <h2 className="text-sm font-semibold">Desired Hours</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">Used in fairness analytics — does not restrict scheduling.</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Input
+              type="number" min={0} max={80} step={0.5}
+              className="h-9 w-24 font-mono"
+              value={hours}
+              onChange={(e) => setHours(e.target.value)}
+              placeholder="e.g. 32"
+            />
+            <span className="text-sm text-muted-foreground">hours / week</span>
+          </div>
+          <Button
+            size="sm" className="bg-teal-600 hover:bg-teal-700 text-white"
+            disabled={saveMutation.isPending || !hours}
+            onClick={() => saveMutation.mutate(parseFloat(hours))}
+          >
+            {saveMutation.isPending ? "Saving…" : "Save"}
+          </Button>
         </div>
-        <div className="space-y-2">
-          {certifications.map((c) => (
-            <div key={c.locationName + c.grantedAt} className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm">{c.locationName}</p>
-                <p className="text-xs text-muted-foreground">{c.timezone}</p>
-              </div>
-              {c.revokedAt ? (
-                <Badge variant="outline" className="text-[10px] text-red-400 border-red-800/40">Revoked</Badge>
-              ) : (
-                <Badge variant="outline" className="text-[10px] text-teal-400 border-teal-800/40">Active</Badge>
-              )}
+
+        {/* Notification preferences */}
+        <div className="border border-border rounded-md p-4 space-y-3">
+          <div>
+            <h2 className="text-sm font-semibold">Notification Preferences</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">In-app notifications are always on.</p>
+          </div>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm">Email simulation</p>
+              <p className="text-xs text-muted-foreground">Receive email copies of notifications</p>
             </div>
-          ))}
-          {certifications.length === 0 && (
-            <p className="text-sm text-muted-foreground">No certifications on file.</p>
-          )}
+            <Switch
+              checked={emailSim}
+              disabled={prefMutation.isPending}
+              onCheckedChange={(val) => prefMutation.mutate(val)}
+            />
+          </div>
         </div>
       </div>
     </div>

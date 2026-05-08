@@ -1,5 +1,5 @@
-import { PageSkeleton } from "@/components/layout/page-skeleton";
+import { StaffSettingsSkeleton } from "@/components/layout/page-skeleton";
 
 export default function Loading() {
-  return <PageSkeleton rows={2} hasHeader={false} />;
+  return <StaffSettingsSkeleton />;
 }

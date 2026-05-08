@@ -129,6 +129,207 @@ export function AnalyticsSkeleton() {
   );
 }
 
+// ── Staff skeletons ────────────────────────────────────────────────────────
+
+export function StaffShiftGridSkeleton({ cards = 6 }: { cards?: number }) {
+  return (
+    <div className="space-y-5 animate-pulse">
+      <div className="space-y-1.5">
+        <Skeleton className="h-6 w-28" />
+        <Skeleton className="h-4 w-48" />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {Array.from({ length: cards }, (_, i) => (
+          <div key={i} className="border border-border rounded-md flex flex-col">
+            <div className="px-4 pt-4 pb-3 border-b border-border space-y-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-4 w-16 rounded-full" />
+              </div>
+              <Skeleton className="h-3 w-24" />
+            </div>
+            <div className="px-4 py-3 flex-1 space-y-2.5">
+              <Skeleton className="h-6 w-36" />
+              <div className="flex gap-1.5">
+                <Skeleton className="h-4 w-14 rounded-full" />
+                <Skeleton className="h-4 w-16 rounded-full" />
+              </div>
+            </div>
+            <div className="px-4 py-2.5 border-t border-border flex justify-end gap-1.5">
+              <Skeleton className="h-7 w-16 rounded-md" />
+              <Skeleton className="h-7 w-14 rounded-md" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function AvailableDropsSkeleton({ cards = 6 }: { cards?: number }) {
+  return (
+    <div className="space-y-5 animate-pulse">
+      <div className="space-y-1.5">
+        <Skeleton className="h-6 w-36" />
+        <Skeleton className="h-4 w-52" />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {Array.from({ length: cards }, (_, i) => (
+          <div key={i} className="border border-border rounded-md flex flex-col">
+            <div className="px-4 pt-4 pb-3 border-b border-border space-y-1.5">
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-3 w-24" />
+            </div>
+            <div className="px-4 py-3 flex-1 space-y-2.5">
+              <Skeleton className="h-6 w-36" />
+              <div className="flex gap-1.5">
+                <Skeleton className="h-4 w-14 rounded-full" />
+              </div>
+              <Skeleton className="h-3 w-32" />
+            </div>
+            <div className="px-4 py-2.5 border-t border-border flex justify-end">
+              <Skeleton className="h-7 w-24 rounded-md" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function SwapsSkeleton({ cards = 4 }: { cards?: number }) {
+  return (
+    <div className="space-y-5 animate-pulse">
+      <div className="space-y-1.5">
+        <Skeleton className="h-6 w-24" />
+        <Skeleton className="h-4 w-56" />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {Array.from({ length: cards }, (_, i) => (
+          <div key={i} className="border border-border rounded-md flex flex-col">
+            <div className="px-4 py-3 border-b border-border flex items-center justify-between gap-2">
+              <div className="flex gap-1.5">
+                <Skeleton className="h-4 w-12 rounded-full" />
+                <Skeleton className="h-4 w-16 rounded-full" />
+              </div>
+              <Skeleton className="h-3 w-24" />
+            </div>
+            <div className="px-4 py-3 flex-1 space-y-2">
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-4 w-36" />
+              <Skeleton className="h-3 w-20" />
+              <div className="flex items-center gap-1.5 pt-1">
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-3 w-4" />
+                <Skeleton className="h-3 w-20" />
+              </div>
+            </div>
+            <div className="px-4 py-2.5 border-t border-border flex justify-end gap-2">
+              <Skeleton className="h-7 w-20 rounded-md" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function AvailabilitySkeleton() {
+  return (
+    <div className="space-y-5 animate-pulse">
+      <div className="space-y-1.5">
+        <Skeleton className="h-6 w-28" />
+        <Skeleton className="h-4 w-52" />
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        {/* Recurring windows panel */}
+        <div className="border border-border rounded-md overflow-hidden">
+          <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+            <div className="space-y-1"><Skeleton className="h-4 w-36" /><Skeleton className="h-3 w-28" /></div>
+            <Skeleton className="h-7 w-14 rounded-md" />
+          </div>
+          {[0,1,2].map((i) => (
+            <div key={i} className="px-4 py-3 border-b border-border last:border-0 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-5 w-9 rounded" />
+                <Skeleton className="h-3 w-28" />
+              </div>
+              <Skeleton className="h-7 w-7 rounded-md" />
+            </div>
+          ))}
+        </div>
+
+        {/* Exceptions panel */}
+        <div className="border border-border rounded-md overflow-hidden">
+          <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+            <div className="space-y-1"><Skeleton className="h-4 w-32" /><Skeleton className="h-3 w-40" /></div>
+            <Skeleton className="h-7 w-14 rounded-md" />
+          </div>
+          {[0,1].map((i) => (
+            <div key={i} className="px-4 py-3 border-b border-border last:border-0 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-4 w-16 rounded" />
+              </div>
+              <Skeleton className="h-7 w-7 rounded-md" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function StaffSettingsSkeleton() {
+  return (
+    <div className="space-y-5 animate-pulse">
+      <Skeleton className="h-6 w-28" />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        {/* Left: Profile + Certs */}
+        <div className="space-y-4">
+          <div className="border border-border rounded-md p-4 space-y-3">
+            <Skeleton className="h-4 w-14" />
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+              {[28,36,24,48,32,40].map((w, i) => (
+                <Skeleton key={i} className={`h-3.5 w-${w === 28?"7":w===36?"9":w===24?"6":w===48?"12":w===32?"8":"10"}`} />
+              ))}
+            </div>
+          </div>
+          <div className="border border-border rounded-md overflow-hidden">
+            <div className="px-4 py-3 border-b border-border space-y-1">
+              <Skeleton className="h-4 w-40" /><Skeleton className="h-3 w-52" />
+            </div>
+            {[0,1].map((i) => (
+              <div key={i} className="px-4 py-3 border-b border-border last:border-0 flex items-center justify-between">
+                <div className="space-y-1"><Skeleton className="h-3.5 w-28" /><Skeleton className="h-3 w-36" /></div>
+                <Skeleton className="h-5 w-14 rounded-full" />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Right: Hours + Notifs */}
+        <div className="space-y-4">
+          <div className="border border-border rounded-md p-4 space-y-3">
+            <div className="space-y-1"><Skeleton className="h-4 w-28" /><Skeleton className="h-3 w-52" /></div>
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-9 w-24 rounded-md" /><Skeleton className="h-3 w-24" />
+            </div>
+            <Skeleton className="h-8 w-16 rounded-md" />
+          </div>
+          <div className="border border-border rounded-md p-4 space-y-3">
+            <div className="space-y-1"><Skeleton className="h-4 w-44" /><Skeleton className="h-3 w-52" /></div>
+            <div className="flex items-center justify-between">
+              <div className="space-y-1"><Skeleton className="h-3.5 w-32" /><Skeleton className="h-3 w-48" /></div>
+              <Skeleton className="h-6 w-10 rounded-full" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function ManagerSettingsSkeleton() {
   return (
     <div className="space-y-5 max-w-md animate-pulse">
