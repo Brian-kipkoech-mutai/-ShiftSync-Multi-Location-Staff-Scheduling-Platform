@@ -4,6 +4,40 @@
 
 ---
 
+## Shift History — Per-Shift Audit Timeline
+
+### What was built
+Managers can open any shift's detail sheet and expand a **Shift History** panel that shows a chronological timeline of every action taken on that shift. The panel is lazy-loaded — no request is made until the manager clicks the toggle.
+
+### What's included
+Three classes of audit entries are surfaced:
+
+| Entry | Example label |
+|---|---|
+| Shift created / edited / published / unpublished / deleted | "Start time changed", "Required skill changed" |
+| Staff assigned / removed / swap approved / rejected | "Alex Chen assigned", "Maria Santos removed" |
+| Overtime override exercised | "Overtime override" |
+
+### Edit entries — specific labels and color coding
+For `shift/edit` entries the system compares `beforeState` and `afterState` to determine exactly what changed. Only the four manager-editable fields are compared: `startUtc`, `endUtc`, `requiredSkillId`, `headcount`. This avoids noise from fields like `updatedAt` or nested relations that Prisma includes in the logged snapshot.
+
+- Single field changed → `"Start time changed"`, `"Headcount changed"`, etc.
+- Multiple fields → `"Start time & End time changed"`, `"Time & Required skill changed"`, etc.
+- Color: **amber** if the required skill changed (may have triggered auto-unassigns), **blue** for all other edits.
+
+When expanded, the diff shows only the changed fields in a three-column row: field label → old value (red) → new value (teal). Timestamps are formatted as readable dates, not raw ISO strings.
+
+### Assignment entries — no diff panel
+Assignment `create` entries (`"Alex Chen assigned"`) have no expandable diff. The API logs the full assignment row as `afterState` with no `beforeState` — there is no "before" for a new assignment. The label itself is the complete information. This is intentional; showing a raw JSON blob of the assignment row would add noise without value.
+
+### Realtime updates
+The history panel updates in realtime without polling. The existing `useRealtimeSync` subscriptions for `shifts` and `shift_assignments` already receive the full changed row from Supabase. On each event, the handler extracts the `shiftId` (note: Supabase uses the real DB column name `shift_id`, not the Prisma camelCase `shiftId`) and calls `queryClient.invalidateQueries(["shift-history", shiftId])`. Both managers see the timeline refresh immediately when any action lands — no extra subscription needed.
+
+### Why no realtime subscription on `audit_logs`
+The history panel never subscribes to the `audit_logs` table directly. Every action that produces an audit entry also produces a change in `shifts` or `shift_assignments`, which the existing subscriptions already catch. Piggybacking on the source tables is sufficient and avoids an extra subscription channel.
+
+---
+
 ## DST Handling for Recurring Availability Windows
 
 Recurring availability is stored as raw wall-clock strings — e.g. `(dayOfWeek=1, startTime="09:00", endTime="17:00")`. When the system checks whether a shift falls inside a staff member's availability, `getAvailabilityInUtc()` in `lib/timezone.ts` converts those strings to UTC for comparison.
