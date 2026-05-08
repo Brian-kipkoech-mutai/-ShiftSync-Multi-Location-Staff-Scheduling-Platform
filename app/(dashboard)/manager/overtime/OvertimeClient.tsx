@@ -2,6 +2,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ReferenceLine, Cell } from "recharts";
 import { cn } from "@/lib/utils";
 
 interface StaffHours {
@@ -19,6 +21,39 @@ function getStatusBadge(hours: number) {
   if (hours >= BLOCK_THRESHOLD) return { label: "Over 40h", className: "bg-red-900/60 text-red-300 border-0" };
   if (hours >= WARNING_THRESHOLD) return { label: "Warning 35h+", className: "bg-amber-900/60 text-amber-300 border-0" };
   return null;
+}
+
+const overtimeChartConfig = {
+  hours: { label: "Hours this week" },
+} satisfies ChartConfig;
+
+function OvertimeBarChart({ staff }: { staff: StaffHours[] }) {
+  const data = staff.map((s) => ({ name: s.name.split(" ")[0], fullName: s.name, hours: s.hours }));
+  const barColor = (hours: number) =>
+    hours >= BLOCK_THRESHOLD ? "#ef4444" : hours >= WARNING_THRESHOLD ? "#f59e0b" : "#14b8a6";
+
+  return (
+    <div className="bg-card border border-border rounded-md p-4">
+      <p className="text-xs font-medium text-muted-foreground mb-3">Weekly hours — current week</p>
+      <ChartContainer config={overtimeChartConfig} className="w-full" style={{ height: Math.max(180, data.length * 36) }}>
+        <BarChart data={data} layout="vertical" margin={{ left: 8, right: 32, top: 4, bottom: 4 }} barCategoryGap="30%">
+          <CartesianGrid horizontal={false} stroke="hsl(var(--border))" strokeOpacity={0.4} />
+          <XAxis type="number" domain={[0, 48]} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+          <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} width={52} />
+          <ChartTooltip
+            content={<ChartTooltipContent
+              formatter={(value, _, props) => [`${Number(value).toFixed(1)}h`, props.payload?.fullName ?? ""]}
+            />}
+          />
+          <ReferenceLine x={WARNING_THRESHOLD} stroke="#f59e0b" strokeDasharray="4 3" strokeOpacity={0.7} label={{ value: "35h", position: "top", fontSize: 9, fill: "#f59e0b" }} />
+          <ReferenceLine x={BLOCK_THRESHOLD} stroke="#ef4444" strokeDasharray="4 3" strokeOpacity={0.7} label={{ value: "40h", position: "top", fontSize: 9, fill: "#ef4444" }} />
+          <Bar dataKey="hours" radius={[0, 3, 3, 0]} maxBarSize={20}>
+            {data.map((d, i) => <Cell key={i} fill={barColor(d.hours)} />)}
+          </Bar>
+        </BarChart>
+      </ChartContainer>
+    </div>
+  );
 }
 
 function HoursBar({ hours }: { hours: number }) {
@@ -50,7 +85,8 @@ export function OvertimeClient({ staff: initialStaff, weekStartISO }: { staff: S
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-4">
+      <OvertimeBarChart staff={staff} />
       {staff.map((s) => {
         const badge = getStatusBadge(s.hours);
         const hoursFormatted = s.hours.toFixed(1);
