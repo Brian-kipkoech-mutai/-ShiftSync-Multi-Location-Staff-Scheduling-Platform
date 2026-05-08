@@ -97,16 +97,14 @@ export function SidebarNav({ role, userName, userEmail }: SidebarNavProps) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
-              <a href="#" className="flex items-center gap-2">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-teal-600 text-white">
-                  <CalendarRange className="size-4" />
-                </div>
-                <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-semibold text-sidebar-foreground">ShiftSync</span>
-                  <span className="text-xs text-sidebar-foreground/50 capitalize">{role}</span>
-                </div>
-              </a>
+            <SidebarMenuButton size="lg" render={<a href="/" />}>
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-teal-600 text-white">
+                <CalendarRange className="size-4" />
+              </div>
+              <div className="flex flex-col gap-0.5 leading-none">
+                <span className="font-semibold text-sidebar-foreground">ShiftSync</span>
+                <span className="text-xs text-sidebar-foreground/50 capitalize">{role}</span>
+              </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
