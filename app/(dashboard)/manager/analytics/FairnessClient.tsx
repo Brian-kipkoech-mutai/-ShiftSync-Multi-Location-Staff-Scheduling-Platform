@@ -52,14 +52,14 @@ function StaffRowSkeleton() {
 
 export function FairnessClient({ initialStaff, initialFairnessScore, initialMean, locations, initialWeeks }: Props) {
   const [weeks, setWeeks] = useState(initialWeeks);
-  const [locationId, setLocationId] = useState<string>("");
+  const [locationId, setLocationId] = useState<string>("all");
 
-  const isInitialCombo = weeks === initialWeeks && locationId === "";
+  const isInitialCombo = weeks === initialWeeks && locationId === "all";
   const { data, isFetching } = useQuery<{ staff: StaffFairness[]; fairnessScore: number | null; mean: number }>({
     queryKey: ["fairness", weeks, locationId],
     queryFn: async () => {
       const params = new URLSearchParams({ weeks: String(weeks) });
-      if (locationId) params.set("locationId", locationId);
+      if (locationId !== "all") params.set("locationId", locationId);
       const res = await fetch(`/api/analytics/fairness?${params}`);
       if (!res.ok) throw new Error("Failed to load analytics");
       return res.json();
@@ -100,10 +100,10 @@ export function FairnessClient({ initialStaff, initialFairnessScore, initialMean
         </div>
         <Select value={locationId} onValueChange={setLocationId}>
           <SelectTrigger className="h-8 w-44 text-xs">
-            <SelectValue placeholder="All locations" />
+            <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All locations</SelectItem>
+            <SelectItem value="all">All locations</SelectItem>
             {locations.map((l) => (
               <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>
             ))}
