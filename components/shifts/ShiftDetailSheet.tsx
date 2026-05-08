@@ -71,7 +71,8 @@ export function ShiftDetailSheet({ shift, onClose, locations, skills, canManage 
           </SheetHeader>
 
           {shift && (
-            <div className="grid flex-1 auto-rows-min gap-6 px-4">
+            <ScrollArea className="flex-1 overflow-hidden">
+            <div className="grid auto-rows-min gap-6 px-4 pb-4">
               {/* Status badges */}
               <div className="flex gap-1.5 flex-wrap">
                 <Badge variant={isDraft ? "secondary" : "default"} className={isDraft ? "" : "bg-teal-700 text-white border-0"}>
@@ -149,6 +150,7 @@ export function ShiftDetailSheet({ shift, onClose, locations, skills, canManage 
                 </div>
               )}
             </div>
+            </ScrollArea>
           )}
 
           {/* Manager actions */}
