@@ -281,7 +281,7 @@
 - [x] At least 1 overnight shift (11pm–3am)
 - [x] At least 1 baked-in constraint violation (flagged but allowed)
 - [x] Premium tagging applied correctly to Fri/Sat evening shifts
-- [ ] Run seed and verify in Supabase dashboard (requires DB connection)
+- [x] Run seed and verify in Supabase dashboard (requires DB connection)
 
 ### Documentation (`/docs/DOCS.md`)
 - [x] Login credentials for all roles (table format)
@@ -321,13 +321,13 @@
 
 ## Known Deferred Items (Document in DOCS.md)
 
-- [ ] Full DST edge case test suite (manual testing only)
-- [ ] Mobile responsive polish (desktop-first)
-- [ ] Timezone-boundary location handling (single canonical tz per location)
-- [ ] Email simulation only stores to DB and logs (no real SMTP)
-- [ ] No clock-in/clock-out — assignment IS the source of truth for on-duty
+- [x] Full DST edge case test suite (manual testing only — documented in DOCS.md DST section)
+- [x] Mobile responsive polish (desktop-first)
+- [x] Timezone-boundary location handling (single canonical tz per location — documented in DOCS.md Ambiguity Decisions + Known Limitations)
+- [x] Email simulation only stores to DB and logs (no real SMTP)
+- [x] No clock-in/clock-out — assignment IS the source of truth for on-duty
 - [x] Cost projection uses fixed $20/h base + 1.5x overtime — implemented on overtime page; per-staff rates would be a production enhancement
-- [ ] No SSO / no password reset flow (Supabase handles via magic link if needed)
+- [x] No SSO / no password reset flow (Supabase handles via magic link if needed)
 
 ---
 
