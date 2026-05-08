@@ -224,6 +224,10 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       };
     });
 
+    // Sort: available first → override-only → fully blocked
+    const order = (s: (typeof results)[0]) => s.canAssign ? 0 : s.needsOverride ? 1 : 2;
+    results.sort((a, b) => order(a) - order(b));
+
     return NextResponse.json(results);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Internal server error";
