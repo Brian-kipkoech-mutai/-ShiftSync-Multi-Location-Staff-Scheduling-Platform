@@ -33,7 +33,7 @@ export function NotificationBell({ userId }: { userId: string }) {
   const seenIds = useRef<Set<string>>(new Set());
   const initialized = useRef(false);
 
-  const { data: notifications = [] } = useQuery<Notification[]>({
+  const { data: notifications = [], isSuccess } = useQuery<Notification[]>({
     queryKey: ["notifications", userId],
     queryFn: async () => {
       const res = await fetch("/api/notifications");
@@ -43,19 +43,27 @@ export function NotificationBell({ userId }: { userId: string }) {
   });
 
   useEffect(() => {
+    // Wait for the first real server response — avoids seeding on the default []
+    if (!isSuccess) return;
+
     if (!initialized.current) {
+      // Seed ALL current IDs silently — pre-existing notifications (read or unread) never toast
       notifications.forEach((n) => seenIds.current.add(n.id));
       initialized.current = true;
       return;
     }
+
+    // Only fire for brand-new IDs that are still unread (realtime-pushed)
     notifications.forEach((n) => {
       if (!seenIds.current.has(n.id)) {
         seenIds.current.add(n.id);
-        toast(n.title, { description: n.body, duration: 5000 });
-        playNotificationChime();
+        if (!n.read) {
+          toast(n.title, { description: n.body, duration: 5000 });
+          playNotificationChime();
+        }
       }
     });
-  }, [notifications]);
+  }, [notifications, isSuccess]);
 
   const unread = notifications.filter((n) => !n.read).length;
 
