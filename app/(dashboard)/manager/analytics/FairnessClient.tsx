@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
 interface StaffFairness {
@@ -97,16 +98,17 @@ export function FairnessClient({ initialStaff, initialFairnessScore, initialMean
             </button>
           ))}
         </div>
-        <select
-          className="h-8 rounded-md border border-input bg-background px-2 text-xs"
-          value={locationId}
-          onChange={(e) => setLocationId(e.target.value)}
-        >
-          <option value="">All locations</option>
-          {locations.map((l) => (
-            <option key={l.id} value={l.id}>{l.name}</option>
-          ))}
-        </select>
+        <Select value={locationId} onValueChange={setLocationId}>
+          <SelectTrigger className="h-8 w-44 text-xs">
+            <SelectValue placeholder="All locations" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">All locations</SelectItem>
+            {locations.map((l) => (
+              <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Fairness score card */}
