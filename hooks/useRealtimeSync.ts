@@ -26,6 +26,8 @@ export function useRealtimeSync(userId: string) {
           .on("postgres_changes", { event: "*", schema: "public", table: "shifts" }, (payload) => {
             console.log("[RT] shifts:", payload.eventType);
             qc.invalidateQueries({ queryKey: ["shifts"] });
+            const shiftId = (payload.new as { id?: string })?.id ?? (payload.old as { id?: string })?.id;
+            if (shiftId) qc.invalidateQueries({ queryKey: ["shift-history", shiftId] });
           })
           .subscribe((s) => console.log("[RT] rt-shifts:", s)),
 
@@ -36,6 +38,8 @@ export function useRealtimeSync(userId: string) {
             qc.invalidateQueries({ queryKey: ["shifts"] });
             qc.invalidateQueries({ queryKey: ["on-duty"] });
             qc.invalidateQueries({ queryKey: ["my-shifts"] });
+            const shiftId = (payload.new as { shiftId?: string })?.shiftId ?? (payload.old as { shiftId?: string })?.shiftId;
+            if (shiftId) qc.invalidateQueries({ queryKey: ["shift-history", shiftId] });
           })
           .subscribe((s) => console.log("[RT] rt-assignments:", s)),
 
