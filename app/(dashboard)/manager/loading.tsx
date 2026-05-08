@@ -1,5 +1,5 @@
-import { GridSkeleton } from "@/components/layout/page-skeleton";
+import { ScheduleSkeleton } from "@/components/layout/page-skeleton";
 
 export default function Loading() {
-  return <GridSkeleton />;
+  return <ScheduleSkeleton />;
 }

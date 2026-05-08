@@ -25,6 +25,13 @@ interface ScheduleShellProps {
   weekStartISO: string;
 }
 
+const LEGEND = [
+  { label: "Draft",        borderClass: "border-dashed border-border", bgClass: "" },
+  { label: "Published",    borderClass: "border-teal-800/60",          bgClass: "bg-teal-950/30" },
+  { label: "Premium",      borderClass: "border-amber-800/60",         bgClass: "bg-amber-950/30" },
+  { label: "Under-staffed",borderClass: "border-red-800/60",           bgClass: "bg-red-950/30" },
+];
+
 export function ScheduleShell({
   weekStart,
   locationIds,
@@ -60,15 +67,34 @@ export function ScheduleShell({
   const publishedCount = shifts.filter((s) => s.status === "published").length;
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-2 sm:gap-3">
+    <div className="space-y-3">
+      {/* Toolbar — stacks on sm, single row on lg */}
+      <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+        {/* Left: week nav */}
         <WeekNav weekStart={weekStart} onNavigate={navigateToWeek} />
-        <div className="flex items-center gap-2 flex-wrap">
+
+        {/* Right: location selector + action + legend */}
+        <div className="flex items-center gap-2 flex-wrap lg:gap-3">
+          {/* Legend — hidden on sm, inline on lg */}
+          <div className="hidden lg:flex items-center gap-3 mr-1">
+            {LEGEND.map(({ label, borderClass, bgClass }) => (
+              <span key={label} className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                <span className={`w-3 h-3 rounded-sm border ${borderClass} ${bgClass} inline-block`} />
+                {label}
+              </span>
+            ))}
+          </div>
+
           <Suspense fallback={null}>
             <LocationSelector locations={locations} selectedIds={locationIds} />
           </Suspense>
+
           {canManage && (
-            <Button size="sm" className="h-8 bg-teal-600 hover:bg-teal-700 text-white gap-1.5" onClick={() => setCreateOpen(true)}>
+            <Button
+              size="sm"
+              className="h-8 bg-teal-600 hover:bg-teal-700 text-white gap-1.5"
+              onClick={() => setCreateOpen(true)}
+            >
               <Plus className="w-3.5 h-3.5" />
               New Shift
             </Button>
@@ -79,28 +105,36 @@ export function ScheduleShell({
       {/* Publish bar */}
       {canManage && (draftCount > 0 || publishedCount > 0) && (
         <div className="flex items-center gap-3 px-3 py-2 rounded-md border border-border bg-card text-sm">
-          <span className="text-muted-foreground flex-1">
+          <span className="text-muted-foreground flex-1 text-xs">
             {draftCount > 0 && <span>{draftCount} draft{draftCount !== 1 ? "s" : ""}</span>}
-            {draftCount > 0 && publishedCount > 0 && <span className="mx-1">·</span>}
+            {draftCount > 0 && publishedCount > 0 && <span className="mx-1.5 text-border">·</span>}
             {publishedCount > 0 && <span>{publishedCount} published</span>}
           </span>
           {draftCount > 0 && (
-            <Button size="sm" className="h-7 text-xs bg-teal-600 hover:bg-teal-700 text-white"
+            <Button
+              size="sm"
+              className="h-7 text-xs bg-teal-600 hover:bg-teal-700 text-white"
               disabled={publishWeek.isPending}
-              onClick={() => publishWeek.mutate(weekStartISO)}>
+              onClick={() => publishWeek.mutate(weekStartISO)}
+            >
               Publish Week
             </Button>
           )}
           {publishedCount > 0 && draftCount === 0 && (
-            <Button size="sm" variant="outline" className="h-7 text-xs"
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs"
               disabled={unpublishWeek.isPending}
-              onClick={() => unpublishWeek.mutate(weekStartISO)}>
+              onClick={() => unpublishWeek.mutate(weekStartISO)}
+            >
               Unpublish
             </Button>
           )}
         </div>
       )}
 
+      {/* Grid */}
       <div className={isFetching && !isNavigating ? "opacity-60 transition-opacity" : ""}>
         <WeekGrid
           weekStart={weekStart}
@@ -110,23 +144,14 @@ export function ScheduleShell({
         />
       </div>
 
-      <div className="flex items-center gap-4 text-[11px] text-muted-foreground">
-        <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded-sm border border-dashed border-border inline-block" />
-          Draft
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded-sm border border-teal-800/60 bg-teal-950/30 inline-block" />
-          Published
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded-sm border border-amber-800/60 bg-amber-950/30 inline-block" />
-          Premium
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded-sm border border-red-800/60 bg-red-950/30 inline-block" />
-          Under-staffed
-        </span>
+      {/* Legend — visible only on sm (lg version is inline in toolbar) */}
+      <div className="flex items-center gap-4 lg:hidden">
+        {LEGEND.map(({ label, borderClass, bgClass }) => (
+          <span key={label} className="flex items-center gap-1 text-[11px] text-muted-foreground">
+            <span className={`w-3 h-3 rounded-sm border ${borderClass} ${bgClass} inline-block`} />
+            {label}
+          </span>
+        ))}
       </div>
 
       <ShiftDetailSheet

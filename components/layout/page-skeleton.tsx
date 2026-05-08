@@ -129,6 +129,72 @@ export function AnalyticsSkeleton() {
   );
 }
 
+export function ScheduleSkeleton() {
+  return (
+    <div className="space-y-3 animate-pulse">
+      {/* Toolbar */}
+      <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+        {/* Week nav */}
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-8 w-8 rounded-sm" />
+          <Skeleton className="h-8 w-8 rounded-sm" />
+          <Skeleton className="h-5 w-44" />
+        </div>
+        {/* Right side: legend (lg only) + location selector + button */}
+        <div className="flex items-center gap-2 lg:gap-3">
+          <div className="hidden lg:flex items-center gap-3 mr-1">
+            {[44, 52, 40, 60].map((w, i) => (
+              <Skeleton key={i} className={`h-3 w-${w === 44 ? "11" : w === 52 ? "14" : w === 40 ? "10" : "16"}`} />
+            ))}
+          </div>
+          <Skeleton className="h-8 w-36 rounded-md" />
+          <Skeleton className="h-8 w-24 rounded-md" />
+        </div>
+      </div>
+
+      {/* Publish bar */}
+      <div className="flex items-center gap-3 px-3 py-2 rounded-md border border-border">
+        <Skeleton className="h-3.5 w-32 flex-1" />
+        <Skeleton className="h-7 w-24 rounded-md" />
+      </div>
+
+      {/* 7-col week grid */}
+      <div className="grid grid-cols-7 gap-px bg-border rounded-md overflow-hidden border border-border min-w-140">
+        {Array.from({ length: 7 }, (_, i) => (
+          <div key={i} className="bg-card flex flex-col min-h-32 lg:min-h-130">
+            {/* Day header */}
+            <div className="flex flex-col items-center justify-center border-b border-border py-2 lg:py-3 gap-1">
+              <Skeleton className="h-2.5 w-7 lg:w-14" />
+              <Skeleton className="h-4 w-5" />
+            </div>
+            {/* Shift cards */}
+            <div className="p-1 space-y-1">
+              {Array.from({ length: i % 3 === 0 ? 2 : i % 3 === 1 ? 1 : 3 }, (_, j) => (
+                <div key={j} className="rounded-md border border-border px-2 py-1.5 space-y-1.5">
+                  <div className="flex justify-between gap-1">
+                    <Skeleton className="h-2.5 w-3/4" />
+                    <Skeleton className="h-2.5 w-5" />
+                  </div>
+                  <Skeleton className="h-2 w-1/2" />
+                  <Skeleton className="h-4 w-14 rounded-sm" />
+                  <Skeleton className="h-2 w-2/3" />
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Legend (sm only) */}
+      <div className="flex items-center gap-4 lg:hidden">
+        {[40, 52, 44, 60].map((w, i) => (
+          <Skeleton key={i} className={`h-3 w-${w === 40 ? "10" : w === 52 ? "14" : w === 44 ? "11" : "16"}`} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function OverviewSkeleton() {
   return (
     <div className="space-y-6 animate-pulse">

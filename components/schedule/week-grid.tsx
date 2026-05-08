@@ -13,7 +13,8 @@ interface WeekGridProps {
   isLoading?: boolean;
 }
 
-const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const DAYS_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const DAYS_FULL  = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 export function WeekGrid({ weekStart, shifts, onShiftClick, isLoading = false }: WeekGridProps) {
   const days = useMemo(
@@ -43,53 +44,63 @@ export function WeekGrid({ weekStart, shifts, onShiftClick, isLoading = false }:
 
   return (
     <div className="overflow-x-auto -mx-1 px-1">
-    <div className="grid grid-cols-7 gap-px bg-border rounded-md overflow-hidden border border-border min-w-[640px]">
-      {days.map((day, i) => {
-        const isToday = isSameDay(day, today);
-        const dayShifts = shiftsByDay.get(i) ?? [];
+      <div className="grid grid-cols-7 gap-px bg-border rounded-md overflow-hidden border border-border min-w-140">
+        {days.map((day, i) => {
+          const isToday = isSameDay(day, today);
+          const dayShifts = shiftsByDay.get(i) ?? [];
 
-        return (
-          <div key={i} className="bg-card flex flex-col min-h-32">
-            <div
-              className={`h-10 flex flex-col items-center justify-center border-b border-border shrink-0 ${
-                isToday ? "bg-teal-950/40" : ""
-              }`}
-            >
-              <span
-                className={`text-[11px] font-medium uppercase tracking-wide ${
-                  isToday ? "text-teal-400" : "text-muted-foreground"
+          return (
+            <div key={i} className="bg-card flex flex-col min-h-32 lg:min-h-130">
+              {/* Column header */}
+              <div
+                className={`flex flex-col items-center justify-center border-b border-border shrink-0 py-2 lg:py-3 ${
+                  isToday ? "bg-teal-950/40" : ""
                 }`}
               >
-                {DAYS[i]}
-              </span>
-              <span
-                className={`text-sm font-semibold leading-tight ${
-                  isToday ? "text-teal-300" : "text-foreground"
-                }`}
-              >
-                {format(day, "d")}
-              </span>
-            </div>
+                {/* Short label on sm, full name on lg */}
+                <span
+                  className={`text-[11px] font-medium uppercase tracking-wide lg:hidden ${
+                    isToday ? "text-teal-400" : "text-muted-foreground"
+                  }`}
+                >
+                  {DAYS_SHORT[i]}
+                </span>
+                <span
+                  className={`hidden lg:block text-xs font-medium ${
+                    isToday ? "text-teal-400" : "text-muted-foreground"
+                  }`}
+                >
+                  {DAYS_FULL[i]}
+                </span>
+                <span
+                  className={`text-sm font-semibold leading-tight lg:text-base ${
+                    isToday ? "text-teal-300" : "text-foreground"
+                  }`}
+                >
+                  {format(day, "d")}
+                </span>
+              </div>
 
-            <div className="flex-1 p-1 space-y-1 overflow-y-auto">
-              {isLoading ? (
-                <ShiftCardSkeleton count={i % 3 === 0 ? 2 : i % 3 === 1 ? 1 : 2} />
-              ) : dayShifts.length === 0 ? (
-                <p className="text-[11px] text-muted-foreground/40 text-center mt-3">—</p>
-              ) : (
-                dayShifts.map((shift) => (
-                  <ShiftCard
-                    key={shift.id}
-                    shift={shift}
-                    onClick={onShiftClick}
-                  />
-                ))
-              )}
+              {/* Shift cards */}
+              <div className="flex-1 p-1 space-y-1 overflow-y-auto">
+                {isLoading ? (
+                  <ShiftCardSkeleton count={i % 3 === 0 ? 2 : i % 3 === 1 ? 1 : 2} />
+                ) : dayShifts.length === 0 ? (
+                  <p className="text-[11px] text-muted-foreground/40 text-center mt-4">—</p>
+                ) : (
+                  dayShifts.map((shift) => (
+                    <ShiftCard
+                      key={shift.id}
+                      shift={shift}
+                      onClick={onShiftClick}
+                    />
+                  ))
+                )}
+              </div>
             </div>
-          </div>
-        );
-      })}
-    </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -105,6 +116,7 @@ function ShiftCardSkeleton({ count }: { count: number }) {
           </div>
           <div className="h-2 bg-muted rounded w-1/2" />
           <div className="h-4 bg-muted rounded w-14" />
+          <div className="h-2 bg-muted rounded w-2/3" />
         </div>
       ))}
     </>

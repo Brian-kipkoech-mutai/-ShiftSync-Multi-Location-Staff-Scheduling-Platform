@@ -25,7 +25,6 @@ export function ShiftCard({ shift, onClick }: ShiftCardProps) {
       onClick={() => onClick?.(shift)}
       className={cn(
         "rounded-md px-2 py-1.5 cursor-pointer transition-colors group",
-        "max-h-20 overflow-hidden",
         isDraft
           ? "border border-dashed border-border bg-card hover:border-muted-foreground/40"
           : "border border-teal-800/60 bg-teal-950/30 hover:border-teal-700",
@@ -33,6 +32,7 @@ export function ShiftCard({ shift, onClick }: ShiftCardProps) {
         shift.isPremium && !isDraft && "border-amber-800/60 bg-amber-950/30 hover:border-amber-700"
       )}
     >
+      {/* Time + headcount */}
       <div className="flex items-start justify-between gap-1 min-w-0">
         <p className="font-mono text-[11px] leading-tight text-foreground truncate flex-1">
           {timeRange}
@@ -47,6 +47,7 @@ export function ShiftCard({ shift, onClick }: ShiftCardProps) {
         </span>
       </div>
 
+      {/* Location */}
       <div className="flex items-center gap-1 mt-0.5 min-w-0">
         <p className="text-[11px] text-muted-foreground truncate">{shift.location.name}</p>
         {shift.isPremium && (
@@ -54,6 +55,7 @@ export function ShiftCard({ shift, onClick }: ShiftCardProps) {
         )}
       </div>
 
+      {/* Skill + draft badge */}
       <div className="flex items-center gap-1 mt-0.5 flex-wrap">
         <Badge
           variant="secondary"
@@ -71,9 +73,15 @@ export function ShiftCard({ shift, onClick }: ShiftCardProps) {
         )}
       </div>
 
+      {/* Assigned staff — show all names on lg, first names on sm */}
       {shift.assignments.length > 0 && (
-        <p className="text-[10px] text-muted-foreground/70 mt-0.5 truncate">
-          {shift.assignments.map((a) => a.user.name.split(" ")[0]).join(", ")}
+        <p className="text-[10px] text-muted-foreground/70 mt-1 leading-tight">
+          <span className="lg:hidden">
+            {shift.assignments.map((a) => a.user.name.split(" ")[0]).join(", ")}
+          </span>
+          <span className="hidden lg:block">
+            {shift.assignments.map((a) => a.user.name).join(", ")}
+          </span>
         </p>
       )}
     </div>
