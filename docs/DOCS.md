@@ -4,6 +4,22 @@
 
 ---
 
+## On-Duty Dashboard — Realtime + Polling Hybrid
+
+The on-duty dashboard shows who is currently working at each location. It uses two update mechanisms in combination.
+
+**Supabase Realtime** handles assignment changes — when a manager assigns or removes a staff member, a row is written to `shift_assignments`, the Realtime subscription fires, and `useRealtimeSync` calls `queryClient.invalidateQueries(["on-duty"])` to trigger a refetch. This keeps the dashboard up-to-date for all assignment-driven changes.
+
+**60-second polling** closes the gap that Realtime cannot. Realtime fires only when a database row is written or changed. No row changes when the clock passes a shift's `startUtc` or `endUtc` — those timestamps are static. This means a shift that starts at 6pm will not appear in the on-duty view until either: (a) a row change happens to trigger an incidental refetch, or (b) a polling interval fires. Without polling, a shift could remain invisible (or fail to disappear) for an arbitrary amount of time after it starts or ends.
+
+The 60-second interval (`refetchInterval: 60_000`) means the maximum lag before a time-based transition is reflected in the dashboard is one poll cycle — acceptable for an operational view, and significantly cheaper than sub-second polling. The `staleTime: 0` setting ensures each poll triggers a real network request rather than being served from cache.
+
+**Why not Realtime only?** Realtime is a CDC (change-data-capture) system — it reacts to row mutations. Time passing is not a mutation. There is no Supabase feature for "notify me when `NOW()` crosses a column value." Polling is the correct tool for time-boundary detection.
+
+**Known limitation:** Up to 60 seconds of lag on shift start/end transitions. For v1 with no clock-in/clock-out, this is the designed behavior — assignment is the source of truth, and 60s lag is acceptable.
+
+---
+
 ## What-If Impact Preview (Assign Staff Modal)
 
 The requirement asks for the ability to see "what-if" impact before confirming an assignment. This is implemented as an **inline projected-hours row** on every staff card inside the Assign Staff modal — no separate confirmation step required.

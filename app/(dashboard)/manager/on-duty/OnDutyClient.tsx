@@ -20,6 +20,11 @@ interface OnDutyAssignment {
 }
 
 export function OnDutyClient({ initialAssignments }: { initialAssignments: OnDutyAssignment[] }) {
+  // Realtime covers assignment changes (new assign / remove) via useRealtimeSync.
+  // It cannot cover time-based transitions — no DB row is written when the clock
+  // passes a shift's startUtc or endUtc, so realtime never fires for those.
+  // 60-second polling closes that gap: max lag before a shift appears/disappears
+  // from the live view is one poll interval.
   const { data: assignments = initialAssignments } = useQuery<OnDutyAssignment[]>({
     queryKey: ["on-duty"],
     queryFn: async () => {
@@ -29,6 +34,7 @@ export function OnDutyClient({ initialAssignments }: { initialAssignments: OnDut
     },
     initialData: initialAssignments,
     staleTime: 0,
+    refetchInterval: 60_000,
   });
 
   // Group by location
