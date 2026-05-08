@@ -38,7 +38,10 @@ export function useEditShift() {
       toast.success("Shift updated");
       if (data.unassignedStaff?.length) {
         const names = (data.unassignedStaff as { name: string }[]).map((a) => a.name).join(", ");
-        toast.warning(`Unassigned due to skill change: ${names}`, { duration: 8000 });
+        const reason = data.unassignedReason === "skill_change" ? "skill change"
+          : data.unassignedReason === "time_change" ? "time change"
+          : "shift change";
+        toast.warning(`Unassigned due to ${reason}: ${names}`, { duration: 8000 });
       }
     },
     onError: (e: Error) => toast.error(e.message),

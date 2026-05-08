@@ -4,6 +4,56 @@
 
 ---
 
+## Shift Edit — Constraint Preview & Confirmed Unassignment
+
+### What was built
+When a manager edits a shift's time or required skill, the system checks whether any currently-assigned staff would violate constraints under the new values **before** committing the change. If violations exist, a confirmation dialog is shown listing each affected staff member and the specific constraint they fail. The manager can cancel (no change applied) or confirm ("Save & unassign"), after which the shift is updated and the disqualified staff are removed and notified.
+
+### Constraint check flow
+```
+Manager submits edit form
+  → PATCH /api/shifts/:id?preview=true
+      — skill changed? → find assignees who lack new skill
+      — time changed?  → run double-booking, rest period,
+                         availability, daily 12h cap checks
+                         against the new start/end times
+      → returns { wouldUnassign: [{ id, name, reason }] }
+  → If wouldUnassign is non-empty → show confirmation dialog
+  → Manager cancels: form stays open, nothing saved
+  → Manager confirms → PATCH /api/shifts/:id (no ?preview)
+      — shift updated in DB
+      — staff re-checked, violators set to status="removed"
+      — in-app notifications sent to manager + unassigned staff
+      — audit log entry written (action: "skill-change-unassign" or "time-change-unassign")
+      → response includes { unassignedStaff, unassignedReason }
+  → Client shows sonner toast with correct reason label
+```
+
+### Constraint types checked during preview
+For **skill changes**: any assignee who does not hold the new required skill is flagged.
+
+For **time changes**, all four time-sensitive hard constraints are checked against the incoming `startUtc`/`endUtc`:
+
+| Constraint | Rule ID |
+|---|---|
+| Double-booking with another active shift | `no_double_booking` |
+| Less than 10h rest from adjacent shift | `rest_period` |
+| Outside staff's declared availability window | `availability` |
+| Would push total daily hours past 12h | `daily_12h_cap` |
+
+Only `severity: "block"` violations trigger unassignment. Warnings (e.g. over 8h/day) do not.
+
+### `unassignedReason` response field
+The API returns `unassignedReason: "skill_change" | "time_change" | "mixed" | null` so the client can show accurate feedback. The sonner toast reads this field — it will never say "skill change" when the cause was a time change.
+
+### Why preview uses direct constraint functions rather than `runAllConstraints`
+`runAllConstraints` reads the shift row from the database to get its times. In preview mode the shift has not been updated yet, so it would check constraints against the old times — defeating the purpose. The preview instead computes the new `startUtc`/`endUtc` from the submitted form values and passes them directly to `checkDoubleBooking`, `checkRestPeriod`, `checkAvailability`, and `checkDailyHours`. The real (non-preview) PATCH updates the shift first, then calls `runAllConstraints` against the now-updated DB row.
+
+### Known limitation
+There is a narrow race window between preview and confirmed save: if another manager makes a change in that interval that creates a new violation for the same staff member, the real API will still unassign them — this time without a dialog, since the confirmation was already given for a different reason. This is acceptable for v1 given the low probability and the fact that the affected staff receive an in-app notification regardless.
+
+---
+
 ## Shift History — Per-Shift Audit Timeline
 
 ### What was built

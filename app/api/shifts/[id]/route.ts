@@ -5,8 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { parseShiftTimes, isPremiumShift } from "@/lib/timezone";
 import { logAudit } from "@/lib/audit";
 import { notify } from "@/lib/notifications";
-import { runAllConstraints, checkDoubleBooking, checkRestPeriod } from "@/lib/constraints";
-import { addHours } from "date-fns";
+import { runAllConstraints, checkDoubleBooking, checkRestPeriod, checkAvailability, checkDailyHours } from "@/lib/constraints";
+import { addHours, differenceInMinutes } from "date-fns";
 
 async function getEditCutoffHours(): Promise<number> {
   const s = await prisma.systemSettings.findUnique({ where: { key: "edit_cutoff_hours" } });
@@ -78,11 +78,16 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     if (date || startTime || endTime) {
       const flagged = new Set(wouldUnassign.map((s) => s.id));
+      const shiftDurationHours = differenceInMinutes(endUtc, startUtc) / 60;
       for (const a of shift.assignments) {
         if (flagged.has(a.userId)) continue;
         const dbViolation = await checkDoubleBooking(a.userId, startUtc, endUtc, id);
         const restViolation = await checkRestPeriod(a.userId, startUtc, endUtc, id);
-        const block = dbViolation ?? restViolation;
+        const availViolation = await checkAvailability(a.userId, shift.locationId, startUtc, endUtc);
+        const dailyViolation = await checkDailyHours(a.userId, startUtc, shift.location.timezone, shiftDurationHours, id);
+        const block = dbViolation ?? restViolation
+          ?? (availViolation?.severity === "block" ? availViolation : null)
+          ?? (dailyViolation?.severity === "block" ? dailyViolation : null);
         if (block) {
           wouldUnassign.push({ id: a.userId, name: a.user.name, reason: block.message });
         }
@@ -127,6 +132,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   // If the required skill changed, unassign staff who no longer qualify
   const skillChanged = requiredSkillId && requiredSkillId !== shift.requiredSkillId;
   let unassignedStaff: { id: string; name: string }[] = [];
+  let unassignedReason: "skill_change" | "time_change" | "mixed" | null = null;
 
   if (skillChanged && shift.assignments.length > 0) {
     const assigneeIds = shift.assignments.map((a) => a.userId);
@@ -137,6 +143,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const holderIds = new Set(holdersOfNewSkill.map((s) => s.userId));
     const toRemove = shift.assignments.filter((a) => !holderIds.has(a.userId));
     unassignedStaff = toRemove.map((a) => ({ id: a.userId, name: a.user.name }));
+    if (unassignedStaff.length > 0) unassignedReason = "skill_change";
 
     if (unassignedStaff.length > 0) {
       const newSkill = updated.requiredSkill;
@@ -215,11 +222,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       });
 
       unassignedStaff = [...unassignedStaff, ...timeViolators.map((v) => ({ id: v.id, name: v.name }))];
+      unassignedReason = unassignedReason === "skill_change" ? "mixed" : "time_change";
     }
   }
 
   await logAudit({ entityType: "shift", entityId: id, action: "edit", before, after: updated, performedBy: user.id });
-  return NextResponse.json({ ...updated, unassignedStaff });
+  return NextResponse.json({ ...updated, unassignedStaff, unassignedReason });
 }
 
 export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
