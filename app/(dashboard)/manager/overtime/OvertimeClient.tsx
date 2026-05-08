@@ -67,7 +67,7 @@ function HoursBar({ hours }: { hours: number }) {
 }
 
 export function OvertimeClient({ staff: initialStaff, weekStartISO }: { staff: StaffHours[]; weekStartISO: string }) {
-  const { data: data } = useQuery<{ staff: StaffHours[] }>({
+  const { data } = useQuery<{ staff: StaffHours[] }>({
     queryKey: ["overtime", weekStartISO],
     queryFn: async () => {
       const res = await fetch(`/api/overtime?weekStart=${weekStartISO}`);

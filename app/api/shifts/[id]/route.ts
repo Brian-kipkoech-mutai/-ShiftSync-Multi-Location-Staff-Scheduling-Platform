@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { parseShiftTimes, isPremiumShift } from "@/lib/timezone";
 import { logAudit } from "@/lib/audit";
 import { notify } from "@/lib/notifications";
-import { runAllConstraints } from "@/lib/constraints";
+import { runAllConstraints, checkDoubleBooking, checkRestPeriod } from "@/lib/constraints";
 import { addHours } from "date-fns";
 
 async function getEditCutoffHours(): Promise<number> {
@@ -34,6 +34,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ error: `Shift starts within ${cutoffHours}h — edits are locked.` }, { status: 409 });
   }
 
+  const { searchParams } = new URL(request.url);
+  const isPreview = searchParams.get("preview") === "true";
+
   const body = await request.json();
   const { date, startTime, endTime, requiredSkillId, headcount } = body;
 
@@ -53,6 +56,40 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     endUtc = parsed.endUtc;
     isOvernight = parsed.isOvernight;
     isPremium = isPremiumShift(startUtc, location.timezone);
+  }
+
+  // Preview mode: compute who would be unassigned without writing anything
+  if (isPreview) {
+    const wouldUnassign: { id: string; name: string; reason: string }[] = [];
+
+    if (requiredSkillId && requiredSkillId !== shift.requiredSkillId && shift.assignments.length > 0) {
+      const assigneeIds = shift.assignments.map((a) => a.userId);
+      const holders = await prisma.userSkill.findMany({
+        where: { userId: { in: assigneeIds }, skillId: requiredSkillId },
+        select: { userId: true },
+      });
+      const holderIds = new Set(holders.map((s) => s.userId));
+      for (const a of shift.assignments) {
+        if (!holderIds.has(a.userId)) {
+          wouldUnassign.push({ id: a.userId, name: a.user.name, reason: "Does not have the new required skill." });
+        }
+      }
+    }
+
+    if (date || startTime || endTime) {
+      const flagged = new Set(wouldUnassign.map((s) => s.id));
+      for (const a of shift.assignments) {
+        if (flagged.has(a.userId)) continue;
+        const dbViolation = await checkDoubleBooking(a.userId, startUtc, endUtc, id);
+        const restViolation = await checkRestPeriod(a.userId, startUtc, endUtc, id);
+        const block = dbViolation ?? restViolation;
+        if (block) {
+          wouldUnassign.push({ id: a.userId, name: a.user.name, reason: block.message });
+        }
+      }
+    }
+
+    return NextResponse.json({ preview: true, wouldUnassign });
   }
 
   const updated = await prisma.shift.update({
@@ -140,7 +177,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const timeViolators: { id: string; name: string; reason: string }[] = [];
 
     for (const a of remaining) {
-      const { violations } = await runAllConstraints(a.userId, id, undefined, { skipAlternatives: true });
+      const { violations } = await runAllConstraints(a.userId, id, id, { skipAlternatives: true });
       const timeRules = new Set(["no_double_booking", "rest_period", "availability", "daily_12h_cap"]);
       const blocks = violations.filter((v) => v.severity === "block" && timeRules.has(v.rule));
       if (blocks.length > 0) {

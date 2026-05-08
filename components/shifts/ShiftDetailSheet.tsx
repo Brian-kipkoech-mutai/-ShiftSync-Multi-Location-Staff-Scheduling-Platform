@@ -143,7 +143,7 @@ export function ShiftDetailSheet({ shift, onClose, locations, skills, canManage 
                         <p className="text-xs text-muted-foreground py-2">No history yet.</p>
                       )}
                       {history.map((entry) => (
-                        <HistoryEntry key={entry.id} entry={entry} />
+                        <HistoryEntry key={entry.id} entry={entry} skillMap={new Map(skills.map((s) => [s.id, s.name]))} />
                       ))}
                     </ScrollArea>
                   )}
@@ -197,12 +197,15 @@ function getShiftEditChanges(
   return SHIFT_EDIT_KEYS.filter((k) => String(before[k]) !== String(after[k]));
 }
 
-function formatFieldValue(key: string, value: unknown): string {
+function formatFieldValue(key: string, value: unknown, skillMap?: Map<string, string>): string {
   if (value === null || value === undefined) return "—";
   if ((key === "startUtc" || key === "endUtc") && typeof value === "string") {
     return new Date(value).toLocaleString("en-US", {
       month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
     });
+  }
+  if (key === "requiredSkillId" && typeof value === "string" && skillMap) {
+    return skillMap.get(value) ?? value;
   }
   return String(value);
 }
@@ -210,12 +213,13 @@ function formatFieldValue(key: string, value: unknown): string {
 // For shift edits: only diff the four editable fields (avoids leaked relations/timestamps)
 function diffShiftEdit(
   before: Record<string, unknown>,
-  after: Record<string, unknown>
+  after: Record<string, unknown>,
+  skillMap?: Map<string, string>
 ): { key: string; before: string; after: string }[] {
   return SHIFT_EDIT_KEYS.filter((k) => String(before[k]) !== String(after[k])).map((k) => ({
     key: SHIFT_EDIT_LABEL[k],
-    before: formatFieldValue(k, before[k]),
-    after: formatFieldValue(k, after[k]),
+    before: formatFieldValue(k, before[k], skillMap),
+    after: formatFieldValue(k, after[k], skillMap),
   }));
 }
 
@@ -277,14 +281,14 @@ function resolveEntry(entry: ShiftHistoryEntry): { label: string; color: string 
   }
 }
 
-function HistoryEntry({ entry }: { entry: ShiftHistoryEntry }) {
+function HistoryEntry({ entry, skillMap }: { entry: ShiftHistoryEntry; skillMap: Map<string, string> }) {
   const [expanded, setExpanded] = useState(false);
   const { label, color } = resolveEntry(entry);
 
   // Only shift edits have a meaningful diff to show
   const diffs =
     entry.entityType === "shift" && entry.action === "edit" && entry.before && entry.after
-      ? diffShiftEdit(entry.before, entry.after)
+      ? diffShiftEdit(entry.before, entry.after, skillMap)
       : null;
   const hasDiff = !!diffs && diffs.length > 0;
 

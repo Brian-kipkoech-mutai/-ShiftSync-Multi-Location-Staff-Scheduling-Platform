@@ -270,8 +270,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     });
     if (overlap) throw new Error("DOUBLE_BOOKING:This staff member is already assigned to an overlapping shift.");
 
-    return tx.shiftAssignment.create({
-      data: { shiftId: id, userId, assignedBy: user.id },
+    return tx.shiftAssignment.upsert({
+      where: { shiftId_userId: { shiftId: id, userId } },
+      update: { status: "active", assignedBy: user.id, assignedAt: new Date() },
+      create: { shiftId: id, userId, assignedBy: user.id },
       include: { user: { select: { id: true, name: true, email: true } }, shift: { include: { location: true } } },
     });
   }).catch((err: Error) => {
@@ -308,7 +310,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   await logAudit({ entityType: "assignment", entityId: a.id, action: "create", after: a, performedBy: user.id });
 
   // Notify OTHER managers at this location if assignment triggers an overtime warning
-  const { violations } = await runAllConstraints(userId, id, undefined, { skipAlternatives: true });
+  const { violations } = await runAllConstraints(userId, id, id, { skipAlternatives: true });
   const warnings = violations.filter((v: ConstraintViolation) => v.severity === "warning");
   if (warnings.length > 0) {
     const otherManagers = await prisma.managerLocationAssignment.findMany({

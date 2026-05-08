@@ -182,7 +182,7 @@ export function NotificationBell({ userId }: { userId: string }) {
                   <p className={cn("text-sm pr-5", !n.read ? "font-medium text-foreground" : "text-foreground/80")}>
                     {n.title}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.body}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{n.body}</p>
                   <p className="text-[11px] text-muted-foreground/70 mt-1">
                     {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}
                   </p>
