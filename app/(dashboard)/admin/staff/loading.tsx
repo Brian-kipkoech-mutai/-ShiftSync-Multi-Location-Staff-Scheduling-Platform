@@ -1,5 +1,5 @@
-import { TableSkeleton } from "@/components/layout/page-skeleton";
+import { StaffGridSkeleton } from "@/components/layout/page-skeleton";
 
 export default function Loading() {
-  return <TableSkeleton rows={10} />;
+  return <StaffGridSkeleton cards={9} />;
 }

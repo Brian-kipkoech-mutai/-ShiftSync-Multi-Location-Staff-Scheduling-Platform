@@ -129,6 +129,89 @@ export function AnalyticsSkeleton() {
   );
 }
 
+// Card widths vary per card to feel natural, not mechanical
+const CARD_WIDTHS = [
+  { name: "w-28", email: "w-36", tz: "w-20", hrs: "w-16", skill1: "w-14", skill2: "w-16", skill3: "w-12", cert1: "w-20", cert2: "w-24" },
+  { name: "w-32", email: "w-40", tz: "w-24", hrs: "w-12", skill1: "w-16", skill2: "w-12", skill3: "w-18", cert1: "w-24", cert2: "w-20" },
+  { name: "w-24", email: "w-32", tz: "w-20", hrs: "w-16", skill1: "w-12", skill2: "w-20", skill3: "w-14", cert1: "w-20", cert2: "w-16" },
+  { name: "w-36", email: "w-44", tz: "w-16", hrs: "w-14", skill1: "w-18", skill2: "w-14", skill3: "w-10", cert1: "w-28", cert2: "w-20" },
+  { name: "w-28", email: "w-36", tz: "w-20", hrs: "w-12", skill1: "w-14", skill2: "w-16", skill3: "w-20", cert1: "w-24", cert2: "w-18" },
+  { name: "w-32", email: "w-40", tz: "w-24", hrs: "w-16", skill1: "w-16", skill2: "w-12", skill3: "w-14", cert1: "w-20", cert2: "w-24" },
+];
+
+export function StaffGridSkeleton({ cards = 6 }: { cards?: number }) {
+  return (
+    <div className="space-y-6 animate-pulse">
+      {/* Centered search */}
+      <div className="flex flex-col items-center gap-1">
+        <Skeleton className="h-9 lg:h-10 w-full max-w-sm lg:max-w-lg rounded-md" />
+        <Skeleton className="h-3 w-20" />
+      </div>
+
+      {/* 3-col card grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {Array.from({ length: cards }, (_, i) => {
+          const w = CARD_WIDTHS[i % CARD_WIDTHS.length];
+          return (
+            <div key={i} className="border border-border rounded-md flex flex-col">
+              {/* Card header */}
+              <div className="px-4 pt-4 pb-3 border-b border-border space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="space-y-1.5 min-w-0">
+                    <Skeleton className={`h-4 ${w.name}`} />
+                    <Skeleton className={`h-3 ${w.email}`} />
+                  </div>
+                  <Skeleton className="h-5 w-12 rounded-full shrink-0" />
+                </div>
+                {/* Meta row */}
+                <div className="flex items-center gap-3 pt-0.5">
+                  <Skeleton className={`h-3 ${w.tz}`} />
+                  <Skeleton className={`h-3 ${w.hrs}`} />
+                </div>
+              </div>
+
+              {/* Card body */}
+              <div className="px-4 py-3 space-y-4 flex-1">
+                {/* Skills */}
+                <div className="space-y-1.5">
+                  <Skeleton className="h-2.5 w-10" />
+                  <div className="flex gap-1.5 flex-wrap">
+                    <Skeleton className={`h-5 ${w.skill1} rounded-full`} />
+                    <Skeleton className={`h-5 ${w.skill2} rounded-full`} />
+                    <Skeleton className={`h-5 ${w.skill3} rounded-full`} />
+                  </div>
+                </div>
+
+                {/* Certified locations */}
+                <div className="space-y-1.5">
+                  <Skeleton className="h-2.5 w-28" />
+                  <div className="flex gap-1.5 flex-wrap">
+                    <Skeleton className={`h-5 ${w.cert1} rounded`} />
+                    <Skeleton className={`h-5 ${w.cert2} rounded`} />
+                  </div>
+                </div>
+
+                {/* Grant access */}
+                <div className="space-y-1.5">
+                  <Skeleton className="h-2.5 w-20" />
+                  <div className="flex gap-1">
+                    <Skeleton className="h-6 w-24 rounded-md" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Card footer */}
+              <div className="px-4 py-2.5 border-t border-border flex justify-end">
+                <Skeleton className="h-7 w-20 rounded-md" />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function GridSkeleton() {
   return (
     <div className="space-y-4 animate-pulse">
