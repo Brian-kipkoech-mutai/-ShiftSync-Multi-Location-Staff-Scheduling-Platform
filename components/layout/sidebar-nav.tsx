@@ -20,6 +20,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   LayoutDashboard,
   CalendarDays,
+  CalendarRange,
   Radio,
   Users,
   MapPin,
@@ -93,15 +94,22 @@ export function SidebarNav({ role, userName, userEmail }: SidebarNavProps) {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b border-sidebar-border px-4 py-3">
-        <div className="flex items-center gap-2 group-data-[collapsible=icon]:hidden">
-          <span className="font-semibold text-teal-400 text-sm tracking-tight">
-            ShiftSync
-          </span>
-          <span className="text-[11px] text-sidebar-foreground/50 capitalize">
-            · {role}
-          </span>
-        </div>
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="lg" asChild>
+              <a href="#" className="flex items-center gap-2">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-teal-600 text-white">
+                  <CalendarRange className="size-4" />
+                </div>
+                <div className="flex flex-col gap-0.5 leading-none">
+                  <span className="font-semibold text-sidebar-foreground">ShiftSync</span>
+                  <span className="text-xs text-sidebar-foreground/50 capitalize">{role}</span>
+                </div>
+              </a>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarHeader>
 
       <SidebarContent>
