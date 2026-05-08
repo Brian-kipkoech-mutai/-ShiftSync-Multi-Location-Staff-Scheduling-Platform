@@ -126,7 +126,7 @@ export default function Home() {
         </section>
 
         {/* Stats strip */}
-        <section className="border-y border-white/6 bg-white/3">
+        <section className="border-y border-transparent bg-transparent">
           <div className="max-w-7xl mx-auto px-6 py-8 grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
             {STATS.map((s) => (
               <div key={s.label}>
