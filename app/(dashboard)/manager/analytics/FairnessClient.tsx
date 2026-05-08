@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
+import { PieChart, Pie, Cell, Label, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { cn } from "@/lib/utils";
 
 interface StaffFairness {
@@ -22,6 +24,117 @@ interface Props {
   initialMean: number;
   locations: { id: string; name: string }[];
   initialWeeks: number;
+}
+
+const CHART_COLORS = [
+  "var(--color-teal-500, #14b8a6)",
+  "var(--color-amber-500, #f59e0b)",
+  "var(--color-sky-500, #0ea5e9)",
+  "var(--color-violet-500, #8b5cf6)",
+  "var(--color-rose-500, #f43f5e)",
+  "var(--color-emerald-500, #10b981)",
+  "var(--color-orange-500, #f97316)",
+  "var(--color-cyan-500, #06b6d4)",
+  "var(--color-pink-500, #ec4899)",
+  "var(--color-lime-500, #84cc16)",
+];
+
+function PremiumDonutChart({ staff, fairnessScore }: { staff: StaffFairness[]; fairnessScore: number | null }) {
+  const hasData = staff.some((s) => s.premiumShifts > 0);
+  const data = hasData
+    ? staff.filter((s) => s.premiumShifts > 0).map((s, i) => ({
+        name: s.name.split(" ")[0],
+        value: s.premiumShifts,
+        fill: CHART_COLORS[i % CHART_COLORS.length],
+      }))
+    : [{ name: "No data", value: 1, fill: "hsl(var(--muted))" }];
+
+  const chartConfig = Object.fromEntries(
+    data.map((d) => [d.name, { label: d.name, color: d.fill }])
+  ) satisfies ChartConfig;
+
+  const scorePct = fairnessScore !== null ? Math.round(fairnessScore * 100) : null;
+  const scoreColor = scorePct === null ? "text-muted-foreground" : scorePct >= 80 ? "text-teal-400" : scorePct >= 60 ? "text-amber-400" : "text-red-400";
+
+  return (
+    <div>
+      <p className="text-xs font-medium text-muted-foreground mb-3">Premium Shift Distribution</p>
+      <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-52">
+        <PieChart>
+          <ChartTooltip content={<ChartTooltipContent hideLabel nameKey="name" />} />
+          <Pie data={data} dataKey="value" nameKey="name" innerRadius={56} outerRadius={80} paddingAngle={2}>
+            {data.map((d, i) => <Cell key={i} fill={d.fill} />)}
+            <Label
+              content={({ viewBox }) => {
+                if (!viewBox || !("cx" in viewBox) || !("cy" in viewBox)) return null;
+                const { cx, cy } = viewBox as { cx: number; cy: number };
+                return (
+                  <text textAnchor="middle" dominantBaseline="middle">
+                    <tspan
+                      x={cx} y={cy - 8}
+                      className={cn("fill-current text-2xl font-semibold font-mono", scoreColor)}
+                      style={{ fontSize: 22 }}
+                    >
+                      {scorePct !== null ? `${scorePct}%` : "—"}
+                    </tspan>
+                    <tspan
+                      x={cx} y={cy + 14}
+                      style={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                    >
+                      fairness
+                    </tspan>
+                  </text>
+                );
+              }}
+            />
+          </Pie>
+        </PieChart>
+      </ChartContainer>
+      {hasData && (
+        <div className="flex flex-wrap gap-x-3 gap-y-1 justify-center mt-1">
+          {data.map((d, i) => (
+            <span key={i} className="flex items-center gap-1 text-[10px] text-muted-foreground">
+              <span className="w-2 h-2 rounded-full shrink-0" style={{ background: d.fill }} />
+              {d.name} ({d.value})
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function HoursBarChart({ staff, weeks }: { staff: StaffFairness[]; weeks: number }) {
+  const data = staff.map((s) => ({
+    name: s.name.split(" ")[0],
+    actual: Math.round(s.totalHours * 10) / 10,
+    target: s.desiredHoursPerWeek != null ? Math.round(s.desiredHoursPerWeek * weeks * 10) / 10 : null,
+  }));
+
+  const chartConfig = {
+    actual: { label: "Actual hours", color: "#14b8a6" },
+    target: { label: "Target hours", color: "#f59e0b" },
+  } satisfies ChartConfig;
+
+  return (
+    <div>
+      <p className="text-xs font-medium text-muted-foreground mb-3">Hours — Actual vs Target</p>
+      <ChartContainer config={chartConfig} className="max-h-52 w-full">
+        <BarChart data={data} barCategoryGap="30%" barGap={2}>
+          <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.5} />
+          <XAxis dataKey="name" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+          <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} width={28} />
+          <ChartTooltip content={<ChartTooltipContent />} />
+          <Bar dataKey="actual" fill="#14b8a6" radius={[3, 3, 0, 0]} maxBarSize={24} />
+          <Bar dataKey="target" fill="#f59e0b" radius={[3, 3, 0, 0]} maxBarSize={24} fillOpacity={0.5} />
+        </BarChart>
+      </ChartContainer>
+      <div className="flex gap-4 text-[10px] text-muted-foreground justify-center mt-2">
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-teal-500" />Actual</span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500 opacity-50" />Target</span>
+      </div>
+    </div>
+  );
 }
 
 function FairnessScoreBadge({ score }: { score: number | null }) {
@@ -137,6 +250,24 @@ export function FairnessClient({ initialStaff, initialFairnessScore, initialMean
           </p>
         </div>
       </div>
+
+      {/* Charts */}
+      {!isFetching && staff.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="bg-card border border-border rounded-md p-4">
+            <PremiumDonutChart staff={staff} fairnessScore={fairnessScore} />
+          </div>
+          <div className="bg-card border border-border rounded-md p-4">
+            <HoursBarChart staff={staff} weeks={weeks} />
+          </div>
+        </div>
+      )}
+      {isFetching && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="bg-card border border-border rounded-md p-4 h-64 animate-pulse" />
+          <div className="bg-card border border-border rounded-md p-4 h-64 animate-pulse" />
+        </div>
+      )}
 
       {/* Staff table */}
       {isFetching ? (
