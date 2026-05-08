@@ -129,6 +129,95 @@ export function AnalyticsSkeleton() {
   );
 }
 
+export function ManagerSettingsSkeleton() {
+  return (
+    <div className="space-y-5 max-w-md animate-pulse">
+      <Skeleton className="h-6 w-28" />
+
+      {/* Profile card */}
+      <div className="border border-border rounded-md p-4 space-y-3">
+        <Skeleton className="h-4 w-16" />
+        <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+          <Skeleton className="h-3.5 w-10" />
+          <Skeleton className="h-3.5 w-28" />
+          <Skeleton className="h-3.5 w-10" />
+          <Skeleton className="h-3.5 w-40" />
+        </div>
+      </div>
+
+      {/* Notification prefs card */}
+      <div className="border border-border rounded-md p-4 space-y-3">
+        <div className="space-y-1">
+          <Skeleton className="h-4 w-44" />
+          <Skeleton className="h-3 w-52" />
+        </div>
+        <div className="flex items-center justify-between">
+          <div className="space-y-1.5">
+            <Skeleton className="h-3.5 w-32" />
+            <Skeleton className="h-3 w-48" />
+          </div>
+          <Skeleton className="h-6 w-10 rounded-full" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function OvertimeSkeleton({ rows = 6 }: { rows?: number }) {
+  return (
+    <div className="space-y-4 animate-pulse">
+      {/* Title + subtitle */}
+      <div className="space-y-1.5">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-56" />
+      </div>
+
+      {/* Horizontal bar chart card */}
+      <div className="border border-border rounded-md p-4 space-y-3">
+        <Skeleton className="h-3 w-44" />
+        <div className="space-y-2.5">
+          {Array.from({ length: rows }, (_, i) => (
+            <div key={i} className="flex items-center gap-3">
+              <Skeleton className="h-3 w-12 shrink-0" />
+              <Skeleton
+                className="h-5 rounded-sm"
+                style={{ width: `${30 + ((i * 13 + 7) % 55)}%` }}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Staff rows */}
+      {Array.from({ length: rows }, (_, i) => (
+        <div key={i} className="border border-border rounded-md p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex-1 space-y-1.5">
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-4 w-28" />
+                {i < 2 && <Skeleton className="h-4 w-20 rounded-full" />}
+              </div>
+              <Skeleton className="h-3 w-32" />
+              <Skeleton className="h-1.5 w-full rounded-full mt-1" />
+            </div>
+            <div className="text-right space-y-1 shrink-0">
+              <Skeleton className="h-6 w-14 ml-auto" />
+              <Skeleton className="h-3 w-16 ml-auto" />
+            </div>
+          </div>
+        </div>
+      ))}
+
+      {/* Legend */}
+      <div className="flex gap-4 pt-2 px-1">
+        <Skeleton className="h-3 w-20" />
+        <Skeleton className="h-3 w-28" />
+        <Skeleton className="h-3 w-24" />
+      </div>
+    </div>
+  );
+}
+
 export function OnDutySkeleton({ cols = 4 }: { cols?: number }) {
   const colCounts = [2, 3, 1, 2]; // staff cards per location column
   return (
