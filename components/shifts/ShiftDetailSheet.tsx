@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -133,7 +134,7 @@ export function ShiftDetailSheet({ shift, onClose, locations, skills, canManage 
                     Shift History
                   </button>
                   {historyOpen && (
-                    <div className="mt-2 space-y-0 border-l border-border ml-1 pl-3">
+                    <ScrollArea className="mt-2 max-h-72 border-l border-border ml-1 pl-3">
                       {historyLoading && (
                         <p className="text-xs text-muted-foreground py-2">Loading…</p>
                       )}
@@ -143,7 +144,7 @@ export function ShiftDetailSheet({ shift, onClose, locations, skills, canManage 
                       {history.map((entry) => (
                         <HistoryEntry key={entry.id} entry={entry} />
                       ))}
-                    </div>
+                    </ScrollArea>
                   )}
                 </div>
               )}
@@ -204,23 +205,16 @@ function formatFieldValue(key: string, value: unknown): string {
   return String(value);
 }
 
-// Returns only the keys that differ between before and after
-function diffEntries(
+// For shift edits: only diff the four editable fields (avoids leaked relations/timestamps)
+function diffShiftEdit(
   before: Record<string, unknown>,
   after: Record<string, unknown>
 ): { key: string; before: string; after: string }[] {
-  const allKeys = new Set([...Object.keys(before), ...Object.keys(after)]);
-  const diffs: { key: string; before: string; after: string }[] = [];
-  for (const key of allKeys) {
-    if (String(before[key]) !== String(after[key])) {
-      diffs.push({
-        key,
-        before: formatFieldValue(key, before[key]),
-        after: formatFieldValue(key, after[key]),
-      });
-    }
-  }
-  return diffs;
+  return SHIFT_EDIT_KEYS.filter((k) => String(before[k]) !== String(after[k])).map((k) => ({
+    key: SHIFT_EDIT_LABEL[k],
+    before: formatFieldValue(k, before[k]),
+    after: formatFieldValue(k, after[k]),
+  }));
 }
 
 function editColor(changes: ShiftEditKey[]): string {
@@ -285,14 +279,12 @@ function HistoryEntry({ entry }: { entry: ShiftHistoryEntry }) {
   const [expanded, setExpanded] = useState(false);
   const { label, color } = resolveEntry(entry);
 
-  // For shift edits show only changed keys; for everything else show only changed keys too
+  // Only shift edits have a meaningful diff to show
   const diffs =
-    entry.before && entry.after
-      ? diffEntries(entry.before, entry.after)
+    entry.entityType === "shift" && entry.action === "edit" && entry.before && entry.after
+      ? diffShiftEdit(entry.before, entry.after)
       : null;
-  // For create/delete with only one side, show that side's SHIFT_EDIT_KEYS fields
-  const singleSide = !entry.before ? entry.after : !entry.after ? entry.before : null;
-  const hasDiff = (diffs && diffs.length > 0) || !!singleSide;
+  const hasDiff = !!diffs && diffs.length > 0;
 
   return (
     <div className="py-2 border-b border-border/40 last:border-0">
@@ -312,11 +304,11 @@ function HistoryEntry({ entry }: { entry: ShiftHistoryEntry }) {
         )}
       </div>
 
-      {expanded && diffs && diffs.length > 0 && (
+      {expanded && diffs && (
         <div className="mt-1.5 bg-muted/20 rounded p-2 space-y-1">
           {diffs.map(({ key, before, after }) => (
-            <div key={key} className="grid grid-cols-[auto_1fr_1fr] gap-x-2 text-[10px]">
-              <span className="text-muted-foreground/60 font-mono">{key}</span>
+            <div key={key} className="grid grid-cols-[6rem_1fr_1fr] gap-x-2 text-[10px]">
+              <span className="text-muted-foreground/60 truncate">{key}</span>
               <span className="text-red-400/80 truncate font-mono">{before}</span>
               <span className="text-teal-400 truncate font-mono">{after}</span>
             </div>
