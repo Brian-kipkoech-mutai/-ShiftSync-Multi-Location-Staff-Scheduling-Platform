@@ -638,10 +638,19 @@ async function main() {
   console.log("✓ Swap/drop requests");
 
   // ── 17. Baked-in constraint violation ─────────────────────────────────────
-  // Alex is assigned to pierFriPremium (upcoming, 5pm-11pm PT)
-  // AND alexFri (current week, same Fri, also 5pm-11pm PT) — different weeks so no overlap.
-  // Instead: create a past violation for demo — James had two shifts with only 8h rest
-  // This is in historical data, flagged by UI but not blocking new assignments.
+  // James Wilson: two historical shifts with only 8h rest (minimum is 10h).
+  // Shift A ends at midnight, Shift B starts at 8am — only 8h gap. Allowed in
+  // historical data but flagged in the per-shift audit trail as a rest violation.
+  // Apr 15 4pm–midnight PT, then Apr 16 8am–4pm PT = only 8h rest (minimum is 10h)
+  const violationShiftA = await mkShift(pier.id, "America/Los_Angeles", lineCook.id, 2026, 4, 15, 16, 0, 1, "published", managerSf.id, true);  // 4pm–midnight
+  const violationShiftB = await mkShift(pier.id, "America/Los_Angeles", lineCook.id, 2026, 4, 16,  8, 16, 1, "published", managerSf.id, false); // 8am–4pm next day
+  await prisma.shiftAssignment.createMany({
+    data: [
+      { shiftId: violationShiftA.id, userId: james.id, status: "active", assignedBy: managerSf.id },
+      { shiftId: violationShiftB.id, userId: james.id, status: "active", assignedBy: managerSf.id },
+    ],
+  });
+  await prisma.auditLog.create({ data: { entityType: "shift", entityId: violationShiftB.id, action: "constraint-violation-baked-in", afterState: { note: "8h rest gap — James Wilson assigned to back-to-back shifts with only 8h rest. Minimum is 10h." }, performedBy: managerSf.id } });
   console.log("✓ Baked-in constraint violation noted in historical data (8h rest gap for James)");
 
   // ── 18. Sample notifications ──────────────────────────────────────────────
