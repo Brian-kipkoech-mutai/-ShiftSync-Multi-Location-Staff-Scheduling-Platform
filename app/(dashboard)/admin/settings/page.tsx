@@ -3,9 +3,12 @@ import { prisma } from "@/lib/prisma";
 import { AdminSettingsClient } from "./AdminSettingsClient";
 
 export default async function AdminSettingsPage() {
-  await requireRole(["admin"]);
+  const user = await requireRole(["admin"]);
 
-  const settings = await prisma.systemSettings.findMany({ orderBy: { key: "asc" } });
+  const [settings, notifPref] = await Promise.all([
+    prisma.systemSettings.findMany({ orderBy: { key: "asc" } }),
+    prisma.notificationPreference.findUnique({ where: { userId: user.id } }),
+  ]);
 
   return (
     <div>
@@ -13,6 +16,7 @@ export default async function AdminSettingsPage() {
       <p className="text-sm text-muted-foreground mb-5">Configure platform-wide behavior</p>
       <AdminSettingsClient
         settings={settings.map((s) => ({ key: s.key, value: s.value, updatedAt: s.updatedAt.toISOString() }))}
+        emailSimulation={notifPref?.emailSimulation ?? true}
       />
     </div>
   );

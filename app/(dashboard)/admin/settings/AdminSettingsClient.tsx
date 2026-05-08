@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 
 interface Setting {
   key: string;
@@ -18,11 +19,29 @@ const SETTING_DESCRIPTIONS: Record<string, string> = {
   premium_end_hour: "Hour of day (24h) when premium calculation ends (e.g. 24 = midnight)",
 };
 
-export function AdminSettingsClient({ settings: initialSettings }: { settings: Setting[] }) {
+export function AdminSettingsClient({ settings: initialSettings, emailSimulation: initialEmailSimulation }: { settings: Setting[]; emailSimulation: boolean }) {
   const [values, setValues] = useState<Record<string, string>>(
     Object.fromEntries(initialSettings.map((s) => [s.key, s.value]))
   );
+  const [emailSim, setEmailSim] = useState(initialEmailSimulation);
   const qc = useQueryClient();
+
+  const prefMutation = useMutation({
+    mutationFn: async (value: boolean) => {
+      const res = await fetch("/api/notifications/preferences", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ emailSimulation: value }),
+      });
+      if (!res.ok) throw new Error("Failed to save preference");
+      return res.json();
+    },
+    onMutate: (value) => setEmailSim(value),
+    onError: (err: Error, value) => {
+      setEmailSim(!value);
+      toast.error(err.message);
+    },
+  });
 
   const saveMutation = useMutation({
     mutationFn: async ({ key, value }: { key: string; value: string }) => {
@@ -43,6 +62,27 @@ export function AdminSettingsClient({ settings: initialSettings }: { settings: S
 
   return (
     <div className="space-y-4 max-w-md">
+      {/* Personal notification preferences */}
+      <div className="bg-card border border-border rounded-md p-4 space-y-3">
+        <div>
+          <h2 className="text-sm font-semibold">My Notification Preferences</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">In-app notifications are always on.</p>
+        </div>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm">Email simulation</p>
+            <p className="text-xs text-muted-foreground">Receive email copies of notifications</p>
+          </div>
+          <Switch
+            checked={emailSim}
+            disabled={prefMutation.isPending}
+            onCheckedChange={(val) => prefMutation.mutate(val)}
+          />
+        </div>
+      </div>
+
+      <p className="text-xs text-muted-foreground pt-2 font-semibold uppercase tracking-wide">System Configuration</p>
+
       {initialSettings.map((s) => (
         <div key={s.key} className="bg-card border border-border rounded-md p-4 space-y-2">
           <div>

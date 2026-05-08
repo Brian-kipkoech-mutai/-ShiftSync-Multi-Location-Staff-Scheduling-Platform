@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 
 interface Certification {
   locationName: string;
@@ -19,11 +20,13 @@ interface Props {
   email: string;
   homeTimezone: string;
   desiredHoursPerWeek: number | null;
+  emailSimulation: boolean;
   certifications: Certification[];
 }
 
-export function SettingsClient({ name, email, homeTimezone, desiredHoursPerWeek, certifications }: Props) {
+export function SettingsClient({ name, email, homeTimezone, desiredHoursPerWeek, emailSimulation: initialEmailSimulation, certifications }: Props) {
   const [hours, setHours] = useState(desiredHoursPerWeek?.toString() ?? "");
+  const [emailSim, setEmailSim] = useState(initialEmailSimulation);
 
   const saveMutation = useMutation({
     mutationFn: async (hoursPerWeek: number) => {
@@ -37,6 +40,23 @@ export function SettingsClient({ name, email, homeTimezone, desiredHoursPerWeek,
     },
     onSuccess: () => toast.success("Desired hours saved"),
     onError: (err: Error) => toast.error(err.message),
+  });
+
+  const prefMutation = useMutation({
+    mutationFn: async (value: boolean) => {
+      const res = await fetch("/api/notifications/preferences", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ emailSimulation: value }),
+      });
+      if (!res.ok) throw new Error("Failed to save preference");
+      return res.json();
+    },
+    onMutate: (value) => setEmailSim(value),
+    onError: (err: Error, value) => {
+      setEmailSim(!value);
+      toast.error(err.message);
+    },
   });
 
   return (
@@ -81,6 +101,25 @@ export function SettingsClient({ name, email, homeTimezone, desiredHoursPerWeek,
         >
           {saveMutation.isPending ? "Saving…" : "Save"}
         </Button>
+      </div>
+
+      {/* Notification preferences */}
+      <div className="bg-card border border-border rounded-md p-4 space-y-3">
+        <div>
+          <h2 className="text-sm font-semibold">Notification Preferences</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">In-app notifications are always on.</p>
+        </div>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm">Email simulation</p>
+            <p className="text-xs text-muted-foreground">Receive email copies of notifications</p>
+          </div>
+          <Switch
+            checked={emailSim}
+            disabled={prefMutation.isPending}
+            onCheckedChange={(val) => prefMutation.mutate(val)}
+          />
+        </div>
       </div>
 
       {/* Certifications */}

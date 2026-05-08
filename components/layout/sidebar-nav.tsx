@@ -58,6 +58,7 @@ const managerNav: NavItem[] = [
   { label: "Analytics", href: "/manager/analytics", icon: BarChart3 },
   { label: "Overtime", href: "/manager/overtime", icon: Clock },
   { label: "Staff", href: "/manager/staff", icon: Users },
+  { label: "Settings", href: "/manager/settings", icon: Settings },
 ];
 
 const staffNav: NavItem[] = [

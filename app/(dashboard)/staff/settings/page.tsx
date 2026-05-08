@@ -5,13 +5,14 @@ import { SettingsClient } from "./SettingsClient";
 export default async function StaffSettingsPage() {
   const user = await requireRole(["staff"]);
 
-  const [desiredHours, certs] = await Promise.all([
+  const [desiredHours, certs, notifPref] = await Promise.all([
     prisma.desiredHours.findUnique({ where: { userId: user.id } }),
     prisma.locationCertification.findMany({
       where: { userId: user.id },
       include: { location: true },
       orderBy: { grantedAt: "asc" },
     }),
+    prisma.notificationPreference.findUnique({ where: { userId: user.id } }),
   ]);
 
   return (
@@ -22,6 +23,7 @@ export default async function StaffSettingsPage() {
         email={user.email}
         homeTimezone={user.homeTimezone}
         desiredHoursPerWeek={desiredHours?.hoursPerWeek ?? null}
+        emailSimulation={notifPref?.emailSimulation ?? true}
         certifications={certs.map((c) => ({
           locationName: c.location.name,
           timezone: c.location.timezone,
