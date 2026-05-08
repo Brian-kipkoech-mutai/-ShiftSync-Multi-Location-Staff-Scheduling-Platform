@@ -4,11 +4,14 @@ import { useState } from "react";
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import { formatRangeForLocation, formatDateForLocation } from "@/lib/timezone";
 import { useDeleteShift } from "@/hooks/mutations/useShiftMutations";
+import { useShiftHistory } from "@/hooks/queries/useShiftHistory";
 import { ShiftFormModal } from "./ShiftFormModal";
 import { AssignStaffModal } from "./AssignStaffModal";
 import type { ShiftWithRelations } from "@/hooks/queries/useShifts";
+import type { ShiftHistoryEntry } from "@/hooks/queries/useShiftHistory";
 
 interface Location { id: string; name: string; timezone: string }
 interface Skill { id: string; name: string }
@@ -24,7 +27,9 @@ interface Props {
 export function ShiftDetailSheet({ shift, onClose, locations, skills, canManage }: Props) {
   const [editOpen, setEditOpen] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const deleteShift = useDeleteShift();
+  const { data: history = [], isLoading: historyLoading } = useShiftHistory(shift?.id ?? "", historyOpen && !!shift);
 
   const timeRange = shift ? formatRangeForLocation(new Date(shift.startUtc), new Date(shift.endUtc), shift.location.timezone) : "";
   const dateStr = shift ? formatDateForLocation(new Date(shift.startUtc), shift.location.timezone) : "";
@@ -115,6 +120,33 @@ export function ShiftDetailSheet({ shift, onClose, locations, skills, canManage 
                   </div>
                 </div>
               )}
+
+              {/* Shift history */}
+              {canManage && (
+                <div>
+                  <button
+                    type="button"
+                    className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    onClick={() => setHistoryOpen((v) => !v)}
+                  >
+                    <span className={cn("inline-block transition-transform", historyOpen ? "rotate-90" : "")}>▶</span>
+                    Shift History
+                  </button>
+                  {historyOpen && (
+                    <div className="mt-2 space-y-0 border-l border-border ml-1 pl-3">
+                      {historyLoading && (
+                        <p className="text-xs text-muted-foreground py-2">Loading…</p>
+                      )}
+                      {!historyLoading && history.length === 0 && (
+                        <p className="text-xs text-muted-foreground py-2">No history yet.</p>
+                      )}
+                      {history.map((entry) => (
+                        <HistoryEntry key={entry.id} entry={entry} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -141,5 +173,88 @@ export function ShiftDetailSheet({ shift, onClose, locations, skills, canManage 
       </Sheet>
 
     </>
+  );
+}
+
+const ACTION_COLOR: Record<string, string> = {
+  create: "text-teal-400",
+  update: "text-blue-400",
+  delete: "text-red-400",
+  publish: "text-green-400",
+  unpublish: "text-amber-400",
+  remove: "text-red-400",
+  override: "text-amber-400",
+  "swap-approve": "text-teal-400",
+  "swap-reject": "text-red-400",
+};
+
+function entryLabel(entry: ShiftHistoryEntry): string {
+  const staffName =
+    (entry.after?.user as { name?: string } | undefined)?.name ??
+    (entry.before?.user as { name?: string } | undefined)?.name;
+
+  switch (entry.entityType) {
+    case "shift":
+      return entry.action === "create" ? "Shift created"
+        : entry.action === "publish" ? "Schedule published"
+        : entry.action === "unpublish" ? "Schedule unpublished"
+        : entry.action === "delete" ? "Shift deleted"
+        : "Shift edited";
+    case "assignment":
+      return entry.action === "create" ? `${staffName ?? "Staff"} assigned`
+        : entry.action === "remove" ? `${staffName ?? "Staff"} removed`
+        : entry.action === "swap-approve" ? "Swap approved"
+        : entry.action === "swap-reject" ? "Swap rejected"
+        : `Assignment ${entry.action}`;
+    case "overtime_override":
+      return "Overtime override";
+    default:
+      return `${entry.entityType} ${entry.action}`;
+  }
+}
+
+function HistoryEntry({ entry }: { entry: ShiftHistoryEntry }) {
+  const [expanded, setExpanded] = useState(false);
+  const color = ACTION_COLOR[entry.action] ?? "text-muted-foreground";
+  const hasDiff = entry.before || entry.after;
+
+  return (
+    <div className="py-2 border-b border-border/40 last:border-0">
+      <div
+        className={cn("flex items-start justify-between gap-2", hasDiff && "cursor-pointer")}
+        onClick={() => hasDiff && setExpanded((v) => !v)}
+      >
+        <div className="min-w-0">
+          <p className={cn("text-xs font-medium", color)}>{entryLabel(entry)}</p>
+          <p className="text-[11px] text-muted-foreground">
+            by {entry.performedByName} · {new Date(entry.performedAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+          </p>
+          {entry.reason && <p className="text-[11px] text-amber-400 mt-0.5">Reason: {entry.reason}</p>}
+        </div>
+        {hasDiff && (
+          <span className={cn("text-[10px] text-muted-foreground shrink-0 mt-0.5 transition-transform", expanded ? "rotate-90" : "")}>▶</span>
+        )}
+      </div>
+      {expanded && hasDiff && (
+        <div className="mt-1.5 grid grid-cols-2 gap-1.5">
+          {entry.before && (
+            <div>
+              <p className="text-[10px] text-muted-foreground mb-0.5">Before</p>
+              <pre className="text-[10px] text-muted-foreground bg-muted/20 rounded p-1.5 overflow-auto max-h-32">
+                {JSON.stringify(entry.before, null, 2)}
+              </pre>
+            </div>
+          )}
+          {entry.after && (
+            <div>
+              <p className="text-[10px] text-muted-foreground mb-0.5">After</p>
+              <pre className="text-[10px] text-muted-foreground bg-muted/20 rounded p-1.5 overflow-auto max-h-32">
+                {JSON.stringify(entry.after, null, 2)}
+              </pre>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
