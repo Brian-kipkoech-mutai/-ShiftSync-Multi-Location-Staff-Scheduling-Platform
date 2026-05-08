@@ -55,11 +55,8 @@ export function getAvailabilityInUtc(
   // Build a local date string using the user's home timezone
   const localDateStr = format(toZonedTime(targetDate, userHomeTimezone), "yyyy-MM-dd");
 
-  const startLocal = new Date(`${localDateStr}T${String(startHour).padStart(2, "0")}:${String(startMin).padStart(2, "0")}:00`);
-  const endLocal = new Date(`${localDateStr}T${String(endHour).padStart(2, "0")}:${String(endMin).padStart(2, "0")}:00`);
-
-  const startUtc = fromZonedTime(startLocal, userHomeTimezone);
-  let endUtc = fromZonedTime(endLocal, userHomeTimezone);
+  const startUtc = fromZonedTime(`${localDateStr}T${String(startHour).padStart(2, "0")}:${String(startMin).padStart(2, "0")}:00`, userHomeTimezone);
+  let endUtc = fromZonedTime(`${localDateStr}T${String(endHour).padStart(2, "0")}:${String(endMin).padStart(2, "0")}:00`, userHomeTimezone);
 
   // Handle overnight availability window (e.g. 22:00–02:00)
   if (endUtc <= startUtc) {
