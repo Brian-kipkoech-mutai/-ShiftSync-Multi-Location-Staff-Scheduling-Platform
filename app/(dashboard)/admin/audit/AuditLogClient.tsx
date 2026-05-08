@@ -42,7 +42,7 @@ export function AuditLogClient({ logs }: { logs: AuditEntry[] }) {
   );
 
   return (
-    <div className="space-y-3 max-w-4xl">
+    <div className="space-y-4">
       <div className="flex items-center gap-2">
         <Input
           className="h-9 max-w-xs"
@@ -58,50 +58,55 @@ export function AuditLogClient({ logs }: { logs: AuditEntry[] }) {
         </a>
       </div>
 
-      <div className="space-y-1.5">
-        {filtered.map((log) => (
-          <div
-            key={log.id}
-            className="bg-card border border-border rounded-md px-3 py-2.5 cursor-pointer hover:bg-muted/10 transition-colors"
-            onClick={() => setExpanded(expanded === log.id ? null : log.id)}
-          >
-            <div className="flex items-center gap-2 flex-wrap">
-              <Badge variant="outline" className={cn("text-[10px] capitalize", ACTION_COLOR[log.action] ?? "")}>
-                {log.action}
-              </Badge>
-              <span className="text-xs text-muted-foreground capitalize">{log.entityType.replace(/_/g, " ")}</span>
-              <span className="text-xs text-foreground/70">by {log.performedBy}</span>
-              <span className="text-[10px] text-muted-foreground ml-auto">
-                {new Date(log.performedAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
-              </span>
-            </div>
-            {log.reason && (
-              <p className="text-xs text-amber-400 mt-1">Reason: {log.reason}</p>
-            )}
-            {expanded === log.id && (
-              <div className="mt-2 pt-2 border-t border-border grid grid-cols-2 gap-2">
-                {log.before && (
-                  <div>
-                    <p className="text-[10px] text-muted-foreground mb-1">Before</p>
-                    <pre className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2 overflow-auto max-h-40">
-                      {JSON.stringify(log.before, null, 2)}
-                    </pre>
-                  </div>
-                )}
-                {log.after && (
-                  <div>
-                    <p className="text-[10px] text-muted-foreground mb-1">After</p>
-                    <pre className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2 overflow-auto max-h-40">
-                      {JSON.stringify(log.after, null, 2)}
-                    </pre>
-                  </div>
-                )}
+      {filtered.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No matching log entries.</p>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {filtered.map((log) => (
+            <div
+              key={log.id}
+              className="bg-card border border-border rounded-md p-3 flex flex-col gap-2 cursor-pointer hover:bg-muted/10 transition-colors"
+              onClick={() => setExpanded(expanded === log.id ? null : log.id)}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <Badge variant="outline" className={cn("text-[10px] capitalize", ACTION_COLOR[log.action] ?? "")}>
+                    {log.action}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground capitalize">{log.entityType.replace(/_/g, " ")}</span>
+                </div>
+                <span className="text-[10px] text-muted-foreground shrink-0">
+                  {new Date(log.performedAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                </span>
               </div>
-            )}
-          </div>
-        ))}
-        {filtered.length === 0 && <p className="text-sm text-muted-foreground">No matching log entries.</p>}
-      </div>
+              <p className="text-xs text-foreground/70">by {log.performedBy}</p>
+              {log.reason && (
+                <p className="text-xs text-amber-400">Reason: {log.reason}</p>
+              )}
+              {expanded === log.id && (log.before || log.after) && (
+                <div className="mt-1 pt-2 border-t border-border grid grid-cols-2 gap-2">
+                  {log.before && (
+                    <div>
+                      <p className="text-[10px] text-muted-foreground mb-1">Before</p>
+                      <pre className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2 overflow-auto max-h-40">
+                        {JSON.stringify(log.before, null, 2)}
+                      </pre>
+                    </div>
+                  )}
+                  {log.after && (
+                    <div>
+                      <p className="text-[10px] text-muted-foreground mb-1">After</p>
+                      <pre className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2 overflow-auto max-h-40">
+                        {JSON.stringify(log.after, null, 2)}
+                      </pre>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

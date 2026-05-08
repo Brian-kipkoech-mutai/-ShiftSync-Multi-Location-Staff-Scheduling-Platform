@@ -18,21 +18,19 @@ export default async function SimulatedEmailsPage() {
       {emails.length === 0 ? (
         <p className="text-sm text-muted-foreground">No simulated emails yet.</p>
       ) : (
-        <div className="space-y-2 max-w-3xl">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {emails.map((e) => (
-            <div key={e.id} className="bg-card border border-border rounded-md p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium">{e.subject}</p>
-                  <p className="text-xs text-muted-foreground">
-                    To: {e.user.name} &lt;{e.user.email}&gt;
-                  </p>
-                </div>
-                <span className="text-[10px] text-muted-foreground shrink-0">
+            <div key={e.id} className="bg-card border border-border rounded-md p-4 flex flex-col gap-2">
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-sm font-medium leading-snug">{e.subject}</p>
+                <span className="text-[10px] text-muted-foreground shrink-0 mt-0.5">
                   {new Date(e.sentAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                 </span>
               </div>
-              <p className="text-xs text-muted-foreground mt-2 whitespace-pre-wrap">{e.body}</p>
+              <p className="text-xs text-teal-400">
+                {e.user.name} &lt;{e.user.email}&gt;
+              </p>
+              <p className="text-xs text-muted-foreground whitespace-pre-wrap mt-auto">{e.body}</p>
             </div>
           ))}
         </div>
