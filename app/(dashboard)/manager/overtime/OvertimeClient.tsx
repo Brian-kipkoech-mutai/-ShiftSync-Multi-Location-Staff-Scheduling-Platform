@@ -86,6 +86,11 @@ export function OvertimeClient({ staff: initialStaff, weekStartISO }: { staff: S
 
   return (
     <div className="space-y-4">
+      <div className="flex gap-4 text-xs text-muted-foreground px-1">
+        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-teal-500" /> Under 35h</span>
+        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber-500" /> 35–39h (warning)</span>
+        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-red-500" /> 40h+ (block)</span>
+      </div>
       <OvertimeBarChart staff={staff} />
       {staff.map((s) => {
         const badge = getStatusBadge(s.hours);
@@ -122,11 +127,6 @@ export function OvertimeClient({ staff: initialStaff, weekStartISO }: { staff: S
         );
       })}
 
-      <div className="flex gap-4 text-xs text-muted-foreground pt-2 px-1">
-        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-teal-500" /> Under 35h</span>
-        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber-500" /> 35–39h (warning)</span>
-        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-red-500" /> 40h+ (block)</span>
-      </div>
     </div>
   );
 }

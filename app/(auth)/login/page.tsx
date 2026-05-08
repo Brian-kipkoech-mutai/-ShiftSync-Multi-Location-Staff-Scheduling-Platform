@@ -36,7 +36,7 @@ export default async function LoginPage() {
           src="/login-cover.png"
           alt="Coastal Eats"
           fill
-          className="object-cover"
+          className="object-cover  grayscale "
           priority
         />
       </div>
