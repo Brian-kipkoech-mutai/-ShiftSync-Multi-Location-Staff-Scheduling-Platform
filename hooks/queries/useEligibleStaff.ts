@@ -8,6 +8,8 @@ export interface EligibleStaffMember {
   email: string;
   skills: string[];
   weeklyHours: number;
+  dailyHours: number;
+  shiftHours: number;
   homeLocation: string;
   violations: { rule: string; message: string; severity: "block" | "override" | "warning" }[];
   canAssign: boolean;

@@ -217,6 +217,8 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
         email: s.email,
         skills: s.skills.map((sk) => sk.skill.name),
         weeklyHours: Math.round(weekH * 10) / 10,
+        dailyHours: Math.round(dayH * 10) / 10,
+        shiftHours: Math.round(shiftHours * 10) / 10,
         homeLocation: s.locationCertifications[0]?.location.name ?? "—",
         violations,
         canAssign: !violations.some((v) => v.severity === "block"),

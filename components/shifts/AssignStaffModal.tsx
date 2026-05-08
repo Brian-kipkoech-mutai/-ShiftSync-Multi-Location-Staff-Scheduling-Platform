@@ -74,13 +74,28 @@ export function AssignStaffModal({ open, onClose, shift }: Props) {
             const warnings = s.violations.filter((v) => v.severity === "warning");
             const overrides = s.violations.filter((v) => v.severity === "override");
 
+            const projWeek = Math.round((s.weeklyHours + s.shiftHours) * 10) / 10;
+            const projDay = Math.round((s.dailyHours + s.shiftHours) * 10) / 10;
+            const weekColor = projWeek > 40 ? "text-red-400" : projWeek >= 35 ? "text-amber-400" : "text-green-500";
+            const dayColor = projDay > 12 ? "text-red-400" : projDay > 8 ? "text-amber-400" : "text-muted-foreground";
+
             return (
               <div key={s.id} className={cn("rounded-md border p-3 text-sm", s.canAssign || s.needsOverride ? "border-border" : "border-border opacity-60")}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="font-medium">{s.name}</p>
-                    <p className="text-xs text-muted-foreground">{s.weeklyHours}h this week · {s.homeLocation}</p>
-                    <p className="text-xs text-muted-foreground capitalize">{s.skills.join(", ")}</p>
+                    <p className="text-xs text-muted-foreground">{s.homeLocation} · <span className="capitalize">{s.skills.join(", ")}</span></p>
+                    {/* What-if impact preview */}
+                    <div className="flex items-center gap-3 mt-1">
+                      <span className="text-[11px] text-muted-foreground font-mono">
+                        {s.weeklyHours}h <span className="text-muted-foreground/50">→</span> <span className={weekColor}>{projWeek}h</span>
+                        <span className="text-muted-foreground/50"> /wk</span>
+                      </span>
+                      <span className="text-[11px] font-mono">
+                        {s.dailyHours}h <span className="text-muted-foreground/50">→</span> <span className={dayColor}>{projDay}h</span>
+                        <span className="text-muted-foreground/50"> today</span>
+                      </span>
+                    </div>
                   </div>
                   <div className="shrink-0">
                     {!s.canAssign && !s.needsOverride ? (
