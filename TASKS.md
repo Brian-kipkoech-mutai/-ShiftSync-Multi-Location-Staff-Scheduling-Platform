@@ -196,7 +196,7 @@
 - [x] Override flow at 40h weekly (reason required, saved)
 - [x] Override flow at 7th consecutive day (reason required, saved)
 - [x] Overtime dashboard — weekly view with hours per staff, color-coded warnings/blocks
-- [ ] Projected cost display (deferred — no hourly rate in schema)
+- [x] Projected cost display — $20/h base + 1.5x overtime premium; weekly total + per-staff cost shown on overtime page
 
 ### Notifications System
 - [x] `/lib/notifications.ts` — `notify(userId, type, title, body, metadata?)` inserts to DB + simulated emails
@@ -315,7 +315,7 @@
 - [x] DOCS.md complete and accurate
 - [x] Public GitHub URL confirmed — https://github.com/Brian-kipkoech-mutai/-ShiftSync-Multi-Location-Staff-Scheduling-Platform
 - [x] Public deployment URL confirmed — https://priority-soft-sigma.vercel.app
-- [ ] Email submitted to hiring manager before deadline (include: deployment URL, GitHub URL, login credentials, brief note pointing to DOCS.md)
+- [x] Email submitted to hiring manager before deadline (include: deployment URL, GitHub URL, login credentials, brief note pointing to DOCS.md)
 
 ---
 
@@ -326,7 +326,7 @@
 - [ ] Timezone-boundary location handling (single canonical tz per location)
 - [ ] Email simulation only stores to DB and logs (no real SMTP)
 - [ ] No clock-in/clock-out — assignment IS the source of truth for on-duty
-- [ ] Cost projection uses fixed $20/h base + 1.5x overtime (placeholder, would be per-staff in production)
+- [x] Cost projection uses fixed $20/h base + 1.5x overtime — implemented on overtime page; per-staff rates would be a production enhancement
 - [ ] No SSO / no password reset flow (Supabase handles via magic link if needed)
 
 ---
