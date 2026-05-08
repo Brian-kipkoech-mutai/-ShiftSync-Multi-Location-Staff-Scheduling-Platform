@@ -226,6 +226,175 @@ The `suggestAlternatives()` function in `lib/constraints.ts` is fully implemente
 
 ---
 
+## Architecture Overview
+
+ShiftSync is a Next.js 14 App Router application deployed on Vercel, backed by a PostgreSQL database hosted on Supabase with Prisma as the ORM. Authentication is handled entirely by Supabase Auth (email/password, session cookie via `@supabase/ssr`). The frontend uses Server Components for initial data loads (no loading spinner on first render) and TanStack Query for all mutations and optimistic updates. Real-time push uses Supabase Realtime CDC subscriptions bridged into TanStack Query cache invalidation via `useRealtimeSync`. A 60-second polling fallback covers time-boundary transitions (shift start/end) that do not produce a DB write and therefore cannot be caught by Realtime alone.
+
+```
+Browser
+  ├── Server Components (initial page data — no client fetch needed)
+  ├── Client Components
+  │     ├── TanStack Query — mutations + cache (optimistic updates, invalidation)
+  │     └── useRealtimeSync — Supabase Realtime → invalidateQueries
+  └── Next.js API Routes (/app/api/**)
+        ├── /lib/auth.ts         — getSessionUser() via Supabase SSR
+        ├── /lib/scope.ts        — location-based access enforcement
+        ├── /lib/constraints.ts  — all 9 constraint checks + suggestAlternatives
+        ├── /lib/timezone.ts     — UTC ↔ zoned conversions (date-fns-tz)
+        ├── /lib/audit.ts        — logAudit() — before/after JSON logging
+        └── /lib/notifications.ts— notify() — in-app + simulated email
+
+Database (Supabase / PostgreSQL)
+  18 tables: users · locations · skills · user_skills
+             location_certifications · manager_location_assignments
+             availability_windows · availability_exceptions · desired_hours
+             shifts · shift_assignments · swap_requests
+             notifications · notification_preferences · simulated_emails
+             audit_logs · overtime_overrides · system_settings
+```
+
+---
+
+## Role Navigation Guide
+
+### Admin (`admin@coastaleats.com`)
+
+After login, redirected to `/admin`. The sidebar shows:
+
+| Page | What to do there |
+|---|---|
+| **Overview** | See all locations, total shifts this week, unresolved swap/drop count |
+| **Schedule** | View the full week grid across all 4 locations. Use location filter to narrow. Click any shift to see detail, history, and assignments. |
+| **On Duty** | Live board — who is working right now at each location. Auto-refreshes every 60s. |
+| **Staff** | Search all 10 staff members. Click any card to see their skills and location certifications. Grant or revoke certifications. Deactivate/reactivate accounts. |
+| **Locations** | Read-only overview of the 4 locations — managers assigned, staff counts, timezone. |
+| **Analytics** | Fairness report. Change the date range (2w / 4w / 8w) and location filter. Premium shift distribution table and fairness score visible at bottom. |
+| **Audit Log** | Full event log with filters by action type. Click any row to expand before/after JSON. Use "Export CSV" for a filtered download. |
+| **Simulated Emails** | Proof that email notifications were triggered. Each entry shows recipient, subject, and body. |
+| **Settings** | Change `edit_cutoff_hours` (default 48) and premium shift window (`premium_start_hour`, `premium_end_hour`). |
+
+---
+
+### Manager (`manager.sf@coastaleats.com` — The Pier + Sunset Grill)
+
+After login, redirected to `/manager` (the schedule view). The sidebar shows:
+
+| Page | What to do there |
+|---|---|
+| **Schedule** | Week grid scoped to your locations. Click a day column to create a shift. Click a shift card to open its detail sheet — edit, delete, assign staff, view history, or start a drop. **Publish / Unpublish** week buttons at the top right. |
+| **On Duty** | Live board for your locations. |
+| **Swap Requests** | Approval queue. Approve or reject swap/drop requests pending for shifts at your locations. |
+| **Analytics** | Fairness report for your locations. |
+| **Overtime** | Horizontal bar chart of weekly hours per staff. Color-coded: teal (safe), amber (35–39h warning), red (40h+ block). |
+| **Staff** | Directory of staff certified at your locations. |
+| **Settings** | Notification preferences. |
+
+**Key flow — assigning staff:**
+1. Click a shift card → Detail sheet opens.
+2. Click **Assign Staff** (shown when `assigned < headcount`).
+3. The modal lists every certified staff member, sorted: available (green) → override-required (amber) → blocked (red).
+4. Green rows show a projected "what-if" hours estimate. Click **Assign**.
+5. If the person is at 35–40h, an amber Override button appears — requires a documented reason.
+
+---
+
+### Staff (`alex.chen@coastaleats.com` — example)
+
+After login, redirected to `/staff` (my schedule). The sidebar shows:
+
+| Page | What to do there |
+|---|---|
+| **My Schedule** | Upcoming assigned shifts. Click any shift to request a **Swap** (pick a specific colleague) or **Drop** (put it in the available pool). |
+| **Available Shifts** | Drop shifts you're qualified to claim. Click **Claim** to submit (manager still approves). |
+| **My Swaps** | Incoming swap requests from colleagues (Accept / Decline). Your own pending swap/drop requests (Cancel). |
+| **Availability** | Set recurring weekly windows (e.g., "Monday 9am–5pm"). Add one-off exceptions (available or unavailable on a specific date). |
+| **Settings** | Set desired hours per week (used in fairness analytics). Toggle email simulation preference. |
+
+---
+
+## The 6 Evaluation Scenarios — Reproduction Steps
+
+### Scenario 1 — The Sunday Night Chaos
+*A staff member calls out 1h before a 7pm shift. Fastest path to coverage.*
+
+1. Log in as **manager.sf@coastaleats.com** (The Pier + Sunset Grill).
+2. Go to **Schedule** → navigate to today's date.
+3. Find any published shift starting around 7pm at The Pier.
+4. Click the shift card → Detail sheet opens.
+5. Click **Assign Staff** (or if headcount is already full, first remove an existing assignment to simulate the call-out — click the ✕ next to a staff name).
+6. The Assign Staff modal immediately shows all certified staff sorted by availability. Staff who are free and qualified have a green **Assign** button. Staff with conflicts show the specific reason (e.g., "Double-booked with Harbor View 6–10pm").
+7. Click **Assign** on any green row — assignment confirmed, staff receives an in-app notification instantly.
+
+*Alternatively, use the Drop flow:* click **Request Drop** on the shift detail sheet → drop appears in the "Available Shifts" pool → any qualifying staff can claim it.
+
+---
+
+### Scenario 2 — The Overtime Trap
+*Manager tries to schedule an employee who would hit 52h.*
+
+1. Log in as **manager.ny@coastaleats.com** (Harbor View + The Wharf).
+2. Go to **Overtime** in the sidebar. Observe **Mike Brown** already at ~39h (red bar, "40h+ block" badge).
+3. Go to **Schedule** → open any upcoming shift.
+4. Click **Assign Staff** and scroll to Mike Brown in the list. His row shows a red **Blocked** badge with the message "Would bring Mike to X.Xh this week — maximum is 40h."
+5. The **what-if** projected hours (current → projected) are visible on his card.
+6. To demonstrate the override path: find a staff member between 35–40h — their row shows an amber **Override** button. Click it, enter a reason, and confirm. The override is saved to `overtime_overrides` and logged in the audit trail.
+
+---
+
+### Scenario 3 — The Timezone Tangle
+*Staff certified at SF (PT) and NY (ET) sets "9am–5pm" availability. What happens?*
+
+1. **James Wilson** (`james.wilson@coastaleats.com`) is certified at The Pier (PT) and Harbor View (ET). His availability is 9am–5pm in his home timezone (PT = `America/Los_Angeles`).
+2. Log in as **manager.cross@coastaleats.com** (manages all 4 locations).
+3. Go to **Schedule** → find a shift at **Harbor View** (ET) that starts at 2pm ET and ends at 10pm ET.
+4. Click **Assign Staff** and find James Wilson. His row will show an availability block: *"Shift time falls outside staff's available hours for this day."* — because 2pm–10pm ET = 11am–7pm PT, which extends beyond his 5pm PT availability cutoff.
+5. Now find a shift at Harbor View that ends at 8pm ET (= 5pm PT). James will be assignable — his availability window exactly covers it.
+6. The constraint message includes the UTC-converted window, so the manager can see exactly why the block occurs.
+
+---
+
+### Scenario 4 — The Simultaneous Assignment
+*Two managers try to assign the same bartender to different shifts at the same time.*
+
+1. Open **two browser tabs** (or two different browsers).
+2. Tab A: log in as **manager.sf@coastaleats.com**. Tab B: log in as **manager.ny@coastaleats.com** — or use **manager.cross@coastaleats.com** in both tabs (it can manage all locations).
+3. In both tabs, navigate to **Schedule** → open two different shifts at the same time that the same staff member qualifies for.
+4. In both tabs, open **Assign Staff** and find the same staff member (e.g., James Wilson, who is cross-certified).
+5. Click **Assign** in Tab A — succeeds.
+6. Immediately click **Assign** in Tab B — the API wraps the assignment in a `SELECT ... FOR UPDATE` transaction and re-checks double-booking inside the lock. Tab B receives: *"This staff member was just assigned to [Shift] — please refresh."*
+7. Both tabs will reflect the correct single-assignment state via the Supabase Realtime subscription within ~1 second.
+
+---
+
+### Scenario 5 — The Fairness Complaint
+*An employee claims they never get Saturday night shifts. Verify or refute.*
+
+1. Log in as **manager.sf@coastaleats.com** or **manager.cross@coastaleats.com**.
+2. Go to **Analytics** in the sidebar.
+3. Set the date range to **4 weeks** and filter by location (or leave at "All").
+4. The **Premium Shift Distribution** table shows each staff member's premium shift count and hours over the period.
+5. **Priya Patel** is seeded with zero premium shifts in the last 4 weeks — she will appear at the bottom with 0 premium shifts while others have 2–5.
+6. The **Fairness Score** (shown as a number between 0 and 1) reflects the inequality. A lower score means worse distribution.
+7. The bar chart at the top shows total hours per staff — cross-reference with premium count to see if Priya is also under-scheduled relative to her stated desired hours.
+
+---
+
+### Scenario 6 — The Regret Swap
+*Staff A and B agree to swap. Staff A cancels before manager approves.*
+
+1. Log in as **carlos.rivera@coastaleats.com**. He has a pending swap request already seeded.
+2. Go to **My Swaps**. The pending swap shows the target staff member, the shift, and its status.
+3. Click **Cancel** on the pending request. A confirmation prompt appears.
+4. Confirm cancellation — the swap is set to `cancelled`. Carlos sees it disappear from his pending list.
+5. The target staff member (seeded as the swap target) receives an in-app notification: *"Swap request cancelled."*
+6. The manager who was awaiting approval also receives a notification.
+7. Carlos's original assignment is unchanged — he still holds the shift.
+8. Open **Audit Log** as admin to see the `cancel` action logged with `performedBy`, `beforeState: pending`, `afterState: cancelled`.
+
+*To run this from scratch (not using seeded data):* log in as any staff member with an upcoming shift → request a swap → have the target staff member accept it → then cancel from the requester's My Swaps page before the manager approves.
+
+---
+
 ## Shift Edit — Time-Change Auto-Unassign
 
 ### What was built

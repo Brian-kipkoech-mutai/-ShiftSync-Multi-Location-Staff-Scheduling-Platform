@@ -11,24 +11,24 @@
 
 ### Supabase project
 - [x] Create Supabase project at supabase.com (region near you, free tier)
-- [ ] Copy: Project URL, anon key, service_role key (Settings → API)
-- [ ] Copy: pooled connection string (Settings → Database → Connection string → Transaction mode, port 6543) — append `?pgbouncer=true&connection_limit=1`
-- [ ] Copy: direct connection string (Settings → Database → Connection string → Session mode, port 5432)
-- [ ] Save all 5 values somewhere safe — needed for `.env.local`
+- [x] Copy: Project URL, anon key, service_role key (Settings → API)
+- [x] Copy: pooled connection string (Settings → Database → Connection string → Transaction mode, port 6543) — append `?pgbouncer=true&connection_limit=1`
+- [x] Copy: direct connection string (Settings → Database → Connection string → Session mode, port 5432)
+- [x] Save all 5 values somewhere safe — needed for `.env.local`
 
 ### Vercel project
-- [ ] Create empty GitHub repo (public)
-- [ ] Create Vercel project, link to the repo (do not deploy yet — repo is empty)
+- [x] Create empty GitHub repo (public)
+- [x] Create Vercel project, link to the repo (do not deploy yet — repo is empty)
 
 ### Local machine
-- [ ] Install Node.js 20+
-- [ ] Install pnpm globally: `npm install -g pnpm`
-- [ ] Install Claude Code (terminal or VS Code extension)
-- [ ] Place `CLAUDE.md`, `TASKS.md`, and `README.md` in repo root before first session
+- [x] Install Node.js 20+
+- [x] Install pnpm globally: `npm install -g pnpm`
+- [x] Install Claude Code (terminal or VS Code extension)
+- [x] Place `CLAUDE.md`, `TASKS.md`, and `README.md` in repo root before first session
 
 ### shadcn MCP setup (do this AFTER `pnpm dlx shadcn@latest init` runs in Day 1)
-- [ ] Run `pnpm dlx shadcn@latest mcp init --client claude` in project root
-- [ ] Open the generated `.mcp.json` and verify it includes `"type": "stdio"` — if missing, add it manually:
+- [x] Run `pnpm dlx shadcn@latest mcp init --client claude` in project root
+- [x] Open the generated `.mcp.json` and verify it includes `"type": "stdio"` — if missing, add it manually:
   ```json
   {
     "mcpServers": {
@@ -40,11 +40,11 @@
     }
   }
   ```
-- [ ] (Recommended) Create a GitHub personal access token (read-only, public repo scope) at github.com/settings/tokens — increases MCP rate limit from 60/hr to 5000/hr
-- [ ] Export the token in your shell: `export GITHUB_PERSONAL_ACCESS_TOKEN=<your_token_here>`
-- [ ] Restart Claude Code completely
-- [ ] Inside Claude Code, run `/mcp` — confirm `shadcn ● connected` with tools listed
-- [ ] If pending or disconnected: re-check `.mcp.json` has `type: stdio`, restart again
+- [x] (Recommended) Create a GitHub personal access token (read-only, public repo scope) at github.com/settings/tokens — increases MCP rate limit from 60/hr to 5000/hr
+- [x] Export the token in your shell: `export GITHUB_PERSONAL_ACCESS_TOKEN=<your_token_here>`
+- [x] Restart Claude Code completely
+- [x] Inside Claude Code, run `/mcp` — confirm `shadcn ● connected` with tools listed
+- [x] If pending or disconnected: re-check `.mcp.json` has `type: stdio`, restart again
 
 ---
 
@@ -67,7 +67,7 @@
 - [x] Wrap `<Providers>` around children in `/app/layout.tsx`
 - [x] Create base folder structure per CLAUDE.md
 - [x] Initialize git repo, make first commit with the scaffold
-- [ ] Push to GitHub
+- [x] Push to GitHub
 - [x] Create empty `DOCS.md` in `/docs` folder
 - [x] Create initial `README.md` with project name, stack, and "WIP" status
 
@@ -91,7 +91,7 @@
 - [x] `overtime_overrides` table
 - [x] `system_settings` table
 - [x] Run initial Prisma migration
-- [ ] Verify schema in Supabase dashboard
+- [x] Verify schema in Supabase dashboard
 - [x] Insert initial system settings: `edit_cutoff_hours=48`, `premium_start_hour=17`, `premium_end_hour=24`
 
 ### Auth & Role System
@@ -205,10 +205,10 @@
 - [x] Unread count badge on bell
 - [x] Mark as read (click individual + "mark all read" button)
 - [x] Admin "simulated emails" viewer at `/admin/simulated-emails`
-- [ ] Notification preferences page (deferred — preferences in DB but no UI toggle)
+- [x] Notification preferences page  
 
 ### Real-Time (Supabase Realtime ↔ TanStack Query)
-- [ ] Enable replication on `shifts`, `shift_assignments`, `swap_requests`, `notifications` tables (manual Supabase dashboard step)
+- [x] Enable replication on `shifts`, `shift_assignments`, `swap_requests`, `notifications` tables (manual Supabase dashboard step)
 - [x] `/hooks/useRealtimeSync.ts` — subscribes to all 4 tables, calls `queryClient.invalidateQueries([key])` on changes
 - [x] Mount realtime sync hook in dashboard layout (runs once per session)
 - [x] On-duty dashboard with 60-second polling fallback
@@ -284,13 +284,13 @@
 - [ ] Run seed and verify in Supabase dashboard (requires DB connection)
 
 ### Documentation (`/docs/DOCS.md`)
-- [ ] Login credentials for all roles (table format)
-- [ ] How to navigate as each role (admin, manager, staff)
-- [ ] All 5 ambiguity decisions documented with rationale
-- [ ] Known limitations section (timezone-boundary locations, no clock-in, DST handling specifics, mobile responsiveness, etc.)
-- [ ] How each of the 6 evaluation scenarios can be reproduced (step-by-step)
-- [ ] Architecture overview (one paragraph + simple diagram)
-- [ ] Any additional assumptions made during implementation
+- [x] Login credentials for all roles (table format)
+- [x] How to navigate as each role (admin, manager, staff)
+- [x] All 5 ambiguity decisions documented with rationale
+- [x] Known limitations section (timezone-boundary locations, no clock-in, DST handling specifics, mobile responsiveness, etc.)
+- [x] How each of the 6 evaluation scenarios can be reproduced (step-by-step)
+- [x] Architecture overview (one paragraph + simple diagram)
+- [x] Any additional assumptions made during implementation
 
 ### Deployment
 - [ ] Push to public GitHub repository
