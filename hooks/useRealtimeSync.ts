@@ -38,7 +38,7 @@ export function useRealtimeSync(userId: string) {
             qc.invalidateQueries({ queryKey: ["shifts"] });
             qc.invalidateQueries({ queryKey: ["on-duty"] });
             qc.invalidateQueries({ queryKey: ["my-shifts"] });
-            const shiftId = (payload.new as { shiftId?: string })?.shiftId ?? (payload.old as { shiftId?: string })?.shiftId;
+            const shiftId = (payload.new as { shift_id?: string })?.shift_id ?? (payload.old as { shift_id?: string })?.shift_id;
             if (shiftId) qc.invalidateQueries({ queryKey: ["shift-history", shiftId] });
           })
           .subscribe((s) => console.log("[RT] rt-assignments:", s)),

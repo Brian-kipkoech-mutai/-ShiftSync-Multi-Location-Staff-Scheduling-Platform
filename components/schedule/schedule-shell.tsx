@@ -34,7 +34,8 @@ export function ScheduleShell({
   weekStartISO,
 }: ScheduleShellProps) {
   const { data: shifts = initialShifts, isFetching } = useShifts(weekStart, locationIds);
-  const [selectedShift, setSelectedShift] = useState<ShiftWithRelations | null>(null);
+  const [selectedShiftId, setSelectedShiftId] = useState<string | null>(null);
+  const selectedShift = selectedShiftId ? (shifts.find((s) => s.id === selectedShiftId) ?? null) : null;
   const [createOpen, setCreateOpen] = useState(false);
   const publishWeek = usePublishWeek();
   const unpublishWeek = useUnpublishWeek();
@@ -90,7 +91,7 @@ export function ScheduleShell({
         <WeekGrid
           weekStart={weekStart}
           shifts={shifts}
-          onShiftClick={setSelectedShift}
+          onShiftClick={(s) => setSelectedShiftId(s.id)}
         />
       </div>
 
@@ -115,7 +116,7 @@ export function ScheduleShell({
 
       <ShiftDetailSheet
         shift={selectedShift}
-        onClose={() => setSelectedShift(null)}
+        onClose={() => setSelectedShiftId(null)}
         locations={locations}
         skills={skills}
         canManage={canManage}
