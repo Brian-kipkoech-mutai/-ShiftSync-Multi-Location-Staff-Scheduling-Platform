@@ -176,9 +176,60 @@ export function ShiftDetailSheet({ shift, onClose, locations, skills, canManage 
   );
 }
 
+// Keys to compare for shift edits, in display order
+const SHIFT_EDIT_KEYS = ["startUtc", "endUtc", "requiredSkillId", "headcount"] as const;
+type ShiftEditKey = (typeof SHIFT_EDIT_KEYS)[number];
+
+const SHIFT_EDIT_LABEL: Record<ShiftEditKey, string> = {
+  startUtc: "Start time",
+  endUtc: "End time",
+  requiredSkillId: "Required skill",
+  headcount: "Headcount",
+};
+
+function getShiftEditChanges(
+  before: Record<string, unknown>,
+  after: Record<string, unknown>
+): ShiftEditKey[] {
+  return SHIFT_EDIT_KEYS.filter((k) => String(before[k]) !== String(after[k]));
+}
+
+function formatFieldValue(key: string, value: unknown): string {
+  if (value === null || value === undefined) return "—";
+  if ((key === "startUtc" || key === "endUtc") && typeof value === "string") {
+    return new Date(value).toLocaleString("en-US", {
+      month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
+    });
+  }
+  return String(value);
+}
+
+// Returns only the keys that differ between before and after
+function diffEntries(
+  before: Record<string, unknown>,
+  after: Record<string, unknown>
+): { key: string; before: string; after: string }[] {
+  const allKeys = new Set([...Object.keys(before), ...Object.keys(after)]);
+  const diffs: { key: string; before: string; after: string }[] = [];
+  for (const key of allKeys) {
+    if (String(before[key]) !== String(after[key])) {
+      diffs.push({
+        key,
+        before: formatFieldValue(key, before[key]),
+        after: formatFieldValue(key, after[key]),
+      });
+    }
+  }
+  return diffs;
+}
+
+function editColor(changes: ShiftEditKey[]): string {
+  if (changes.includes("requiredSkillId")) return "text-amber-400";
+  return "text-blue-400";
+}
+
 const ACTION_COLOR: Record<string, string> = {
   create: "text-teal-400",
-  update: "text-blue-400",
   delete: "text-red-400",
   publish: "text-green-400",
   unpublish: "text-amber-400",
@@ -188,35 +239,60 @@ const ACTION_COLOR: Record<string, string> = {
   "swap-reject": "text-red-400",
 };
 
-function entryLabel(entry: ShiftHistoryEntry): string {
+function resolveEntry(entry: ShiftHistoryEntry): { label: string; color: string } {
   const staffName =
     (entry.after?.user as { name?: string } | undefined)?.name ??
     (entry.before?.user as { name?: string } | undefined)?.name;
 
+  if (entry.entityType === "shift" && entry.action === "edit" && entry.before && entry.after) {
+    const changes = getShiftEditChanges(entry.before, entry.after);
+    const color = editColor(changes);
+    if (changes.length === 0) return { label: "Shift edited", color: "text-blue-400" };
+    if (changes.length === 1) return { label: `${SHIFT_EDIT_LABEL[changes[0]]} changed`, color };
+    return {
+      label: changes.map((k) => SHIFT_EDIT_LABEL[k]).join(" & ") + " changed",
+      color,
+    };
+  }
+
   switch (entry.entityType) {
     case "shift":
-      return entry.action === "create" ? "Shift created"
-        : entry.action === "publish" ? "Schedule published"
-        : entry.action === "unpublish" ? "Schedule unpublished"
-        : entry.action === "delete" ? "Shift deleted"
-        : "Shift edited";
+      return {
+        label: entry.action === "create" ? "Shift created"
+          : entry.action === "publish" ? "Schedule published"
+          : entry.action === "unpublish" ? "Schedule unpublished"
+          : entry.action === "delete" ? "Shift deleted"
+          : "Shift edited",
+        color: ACTION_COLOR[entry.action] ?? "text-muted-foreground",
+      };
     case "assignment":
-      return entry.action === "create" ? `${staffName ?? "Staff"} assigned`
-        : entry.action === "remove" ? `${staffName ?? "Staff"} removed`
-        : entry.action === "swap-approve" ? "Swap approved"
-        : entry.action === "swap-reject" ? "Swap rejected"
-        : `Assignment ${entry.action}`;
+      return {
+        label: entry.action === "create" ? `${staffName ?? "Staff"} assigned`
+          : entry.action === "remove" ? `${staffName ?? "Staff"} removed`
+          : entry.action === "swap-approve" ? "Swap approved"
+          : entry.action === "swap-reject" ? "Swap rejected"
+          : `Assignment ${entry.action}`,
+        color: ACTION_COLOR[entry.action] ?? "text-teal-400",
+      };
     case "overtime_override":
-      return "Overtime override";
+      return { label: "Overtime override", color: "text-amber-400" };
     default:
-      return `${entry.entityType} ${entry.action}`;
+      return { label: `${entry.entityType} ${entry.action}`, color: "text-muted-foreground" };
   }
 }
 
 function HistoryEntry({ entry }: { entry: ShiftHistoryEntry }) {
   const [expanded, setExpanded] = useState(false);
-  const color = ACTION_COLOR[entry.action] ?? "text-muted-foreground";
-  const hasDiff = entry.before || entry.after;
+  const { label, color } = resolveEntry(entry);
+
+  // For shift edits show only changed keys; for everything else show only changed keys too
+  const diffs =
+    entry.before && entry.after
+      ? diffEntries(entry.before, entry.after)
+      : null;
+  // For create/delete with only one side, show that side's SHIFT_EDIT_KEYS fields
+  const singleSide = !entry.before ? entry.after : !entry.after ? entry.before : null;
+  const hasDiff = (diffs && diffs.length > 0) || !!singleSide;
 
   return (
     <div className="py-2 border-b border-border/40 last:border-0">
@@ -225,7 +301,7 @@ function HistoryEntry({ entry }: { entry: ShiftHistoryEntry }) {
         onClick={() => hasDiff && setExpanded((v) => !v)}
       >
         <div className="min-w-0">
-          <p className={cn("text-xs font-medium", color)}>{entryLabel(entry)}</p>
+          <p className={cn("text-xs font-medium", color)}>{label}</p>
           <p className="text-[11px] text-muted-foreground">
             by {entry.performedByName} · {new Date(entry.performedAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
           </p>
@@ -235,24 +311,16 @@ function HistoryEntry({ entry }: { entry: ShiftHistoryEntry }) {
           <span className={cn("text-[10px] text-muted-foreground shrink-0 mt-0.5 transition-transform", expanded ? "rotate-90" : "")}>▶</span>
         )}
       </div>
-      {expanded && hasDiff && (
-        <div className="mt-1.5 grid grid-cols-2 gap-1.5">
-          {entry.before && (
-            <div>
-              <p className="text-[10px] text-muted-foreground mb-0.5">Before</p>
-              <pre className="text-[10px] text-muted-foreground bg-muted/20 rounded p-1.5 overflow-auto max-h-32">
-                {JSON.stringify(entry.before, null, 2)}
-              </pre>
+
+      {expanded && diffs && diffs.length > 0 && (
+        <div className="mt-1.5 bg-muted/20 rounded p-2 space-y-1">
+          {diffs.map(({ key, before, after }) => (
+            <div key={key} className="grid grid-cols-[auto_1fr_1fr] gap-x-2 text-[10px]">
+              <span className="text-muted-foreground/60 font-mono">{key}</span>
+              <span className="text-red-400/80 truncate font-mono">{before}</span>
+              <span className="text-teal-400 truncate font-mono">{after}</span>
             </div>
-          )}
-          {entry.after && (
-            <div>
-              <p className="text-[10px] text-muted-foreground mb-0.5">After</p>
-              <pre className="text-[10px] text-muted-foreground bg-muted/20 rounded p-1.5 overflow-auto max-h-32">
-                {JSON.stringify(entry.after, null, 2)}
-              </pre>
-            </div>
-          )}
+          ))}
         </div>
       )}
     </div>
