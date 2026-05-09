@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +30,7 @@ export function ShiftDetailSheet({ shift, onClose, locations, skills, canManage 
   const [editOpen, setEditOpen] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const deleteShift = useDeleteShift();
   const { data: history = [], isLoading: historyLoading } = useShiftHistory(shift?.id ?? "", historyOpen && !!shift);
 
@@ -39,13 +41,34 @@ export function ShiftDetailSheet({ shift, onClose, locations, skills, canManage 
   const isUnder = shift?.status === "published" && !!shift && shift.assignments.length < shift.headcount;
 
   async function handleDelete() {
-    if (!shift || !confirm("Delete this draft shift?")) return;
+    if (!shift) return;
     await deleteShift.mutateAsync(shift.id);
+    setDeleteOpen(false);
     onClose();
   }
 
   return (
     <>
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete draft shift?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the draft shift. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleDelete}
+              disabled={deleteShift.isPending}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <Sheet open={!!shift} onOpenChange={(v) => !v && onClose()}>
         {shift && (
           <>
@@ -166,7 +189,7 @@ export function ShiftDetailSheet({ shift, onClose, locations, skills, canManage 
               </Button>
               {isDraft && (
                 <Button size="sm" variant="outline" className="w-full text-destructive hover:text-destructive border-destructive/30 hover:bg-destructive/10"
-                  onClick={handleDelete} disabled={deleteShift.isPending}>
+                  onClick={() => setDeleteOpen(true)} disabled={deleteShift.isPending}>
                   Delete Draft
                 </Button>
               )}
