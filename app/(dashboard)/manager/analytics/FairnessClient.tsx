@@ -119,7 +119,7 @@ function HoursBarChart({ staff, weeks }: { staff: StaffFairness[]; weeks: number
   return (
     <div>
       <p className="text-xs font-medium text-muted-foreground mb-3">Hours — Actual vs Target</p>
-      <ChartContainer config={chartConfig} className="max-h-64 w-full">
+      <ChartContainer config={chartConfig} className="h-64 w-full overflow-hidden">
         <BarChart data={data} barCategoryGap="30%" barGap={2}>
           <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.5} />
           <XAxis dataKey="name" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
