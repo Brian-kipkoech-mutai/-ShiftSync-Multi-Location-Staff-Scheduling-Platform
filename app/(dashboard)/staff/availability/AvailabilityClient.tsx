@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePickerInput } from "@/components/ui/date-picker";
 import { Badge } from "@/components/ui/badge";
 import { Trash2, Plus, Clock } from "lucide-react";
 
@@ -206,7 +207,7 @@ export function AvailabilityClient({
             <div className="px-4 py-4 space-y-3 bg-card">
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">Date</label>
-                <Input type="date" className="h-9 max-w-[160px]" value={newException.date} onChange={(e) => setNewException({ ...newException, date: e.target.value })} />
+                <DatePickerInput value={newException.date} onChange={(v) => setNewException({ ...newException, date: v })} className="max-w-[200px]" />
               </div>
               <div className="flex items-center gap-2">
                 <input

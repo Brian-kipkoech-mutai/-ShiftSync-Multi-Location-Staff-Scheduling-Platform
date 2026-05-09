@@ -9,6 +9,7 @@ import { toZonedTime } from "date-fns-tz";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { DatePickerInput } from "@/components/ui/date-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useCreateShift, useEditShift } from "@/hooks/mutations/useShiftMutations";
@@ -175,7 +176,9 @@ export function ShiftFormModal({ open, onClose, shift, defaultDate, locations, s
               <FormField control={form.control} name="date" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Date</FormLabel>
-                  <FormControl><Input type="date" className="h-9" {...field} /></FormControl>
+                  <FormControl>
+                    <DatePickerInput value={field.value} onChange={field.onChange} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
