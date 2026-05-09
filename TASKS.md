@@ -162,7 +162,7 @@
 - [x] Optimistic locking: `BEGIN; SELECT ... FOR UPDATE; re-check constraints; INSERT; COMMIT`
 - [x] Conflict error UI: "This staff member was just assigned to [Other Shift] by [Name]. Please refresh."
 - [x] Remove assignment action (writes audit log)
-- [ ] What-if preview — shows hour totals impact before confirming (deferred)
+- [x] What-if preview — shows hour totals impact before confirming 
 
 ### Schedule Publish/Unpublish
 - [x] Publish week action (changes all draft shifts in selected week → published)

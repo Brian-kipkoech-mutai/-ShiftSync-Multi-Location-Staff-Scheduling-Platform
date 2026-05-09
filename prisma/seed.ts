@@ -375,7 +375,7 @@ async function main() {
     const isPremium = (localDow === 5 || localDow === 6) && localHour >= 17;
     const isOvernight = endNextDay || endHour < startHour;
 
-    return prisma.shift.create({
+    const shift = await prisma.shift.create({
       data: {
         locationId,
         startUtc,
@@ -388,6 +388,16 @@ async function main() {
         createdBy: createdById,
       },
     });
+    await prisma.auditLog.create({
+      data: {
+        entityType: "shift",
+        entityId: shift.id,
+        action: "create",
+        afterState: { locationId, startUtc, endUtc, requiredSkillId: skillId, headcount, status, isOvernight, isPremium },
+        performedBy: createdById,
+      },
+    });
+    return shift;
   }
 
   // ── UPCOMING WEEK (May 11–17) — draft + published mix ────────────────────
@@ -594,14 +604,22 @@ async function main() {
     }
   }
 
-  // Create all assignments sequentially
+  // Create all assignments sequentially with audit logs
   const assignments: Awaited<ReturnType<typeof prisma.shiftAssignment.create>>[] = [];
   for (const a of assignmentData) {
-    assignments.push(
-      await prisma.shiftAssignment.create({
-        data: { shiftId: a.shiftId, userId: a.userId, assignedBy: a.assignedBy, status: "active" },
-      })
-    );
+    const assignment = await prisma.shiftAssignment.create({
+      data: { shiftId: a.shiftId, userId: a.userId, assignedBy: a.assignedBy, status: "active" },
+    });
+    assignments.push(assignment);
+    await prisma.auditLog.create({
+      data: {
+        entityType: "assignment",
+        entityId: assignment.id,
+        action: "create",
+        afterState: { shiftId: a.shiftId, userId: a.userId, status: "active" },
+        performedBy: a.assignedBy,
+      },
+    });
   }
   console.log(`✓ Shift assignments (${assignments.length})`);
 
